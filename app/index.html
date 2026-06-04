@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rexy Bridge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0A0D12; --surface:#131822; --surface2:#1B2230;
+    --border:#26324a; --border-soft:#1c2536;
+    --pink:#CE2A7C; --gold:#F6BE1A; --blue:#4F8FCB; --blue-deep:#336699;
+    --text:#EAF1F8; --muted:#8497A8; --faint:#5a6b7d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+       padding:20px 22px 40px;display:flex;flex-direction:column;gap:16px;min-height:100vh;
+       -webkit-app-region:drag}
+  input,select,button,.card,.panel{-webkit-app-region:no-drag}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+          border-bottom:1px solid var(--border-soft);padding-bottom:14px;padding-top:6px}
+  .brand{display:flex;align-items:center;gap:20px}
+  .brand .logo-main{height:90px;display:block}
+  .brand .logo-bridge{height:144px;display:block}
+  .status{display:flex;gap:16px;font-size:.66rem;color:var(--muted);letter-spacing:.1em}
+  .status .item{display:flex;align-items:center;gap:7px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#33404f;transition:background .3s}
+  .dot.on{background:#46d39a}.dot.live{background:var(--pink)}.dot.warn{background:var(--gold)}
+
+  /* config */
+  .config{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
+          background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px}
+  .config .field{display:flex;flex-direction:column;gap:4px}
+  .config label{font-size:.56rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .config input{background:#0d1219;border:1px solid var(--border);color:var(--text);
+                font-family:'JetBrains Mono';font-size:.78rem;padding:6px 9px;border-radius:6px;outline:none;width:118px}
+  .config input.narrow{width:74px}
+  .config input:focus{border-color:var(--blue)}
+
+  .section-label{font-size:.66rem;letter-spacing:.22em;color:var(--muted);
+                 text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:8px 2px 0}
+  .section-label::before{content:"";width:10px;height:10px;border-radius:3px}
+  .lbl-wheels::before{background:var(--pink)}
+  .lbl-focus::before{background:var(--gold)}
+  .lbl-grip::before{background:var(--blue)}
+  .lbl-functions::before{background:#c084fc}                /* purple-ish — functions */
+  .func-panel{margin-top:0;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;gap:6px}
+  .func-card{display:flex;align-items:center;gap:10px;font-size:.7rem;flex-wrap:wrap}
+  .func-card .func-name{flex:0 0 auto;color:var(--text);font-weight:500;min-width:140px;font-size:.78rem}
+  .func-card input[type=number]{width:60px;background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.7rem;padding:3px 6px;border-radius:5px;outline:none}
+  .func-card .tlabel{color:var(--muted);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase}
+
+  .grid{display:grid;gap:12px}
+  .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+
+  .card{background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;
+        padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .card .head{display:flex;align-items:center;justify-content:space-between}
+  .card .name{font-weight:600;font-size:.95rem}
+  .card .osc{font-family:'JetBrains Mono';font-size:.6rem;color:var(--faint)}
+  .card .val{font-family:'JetBrains Mono';font-size:1.5rem;font-weight:500}
+  .accent-pink{border-top:3px solid var(--pink)} .v-pink{color:var(--pink)}
+  .accent-gold{border-top:3px solid var(--gold)} .v-gold{color:var(--gold)}
+  .accent-blue{border-top:3px solid var(--blue)} .v-blue{color:var(--blue)}
+
+  .bar{height:7px;background:#0d1219;border-radius:4px;position:relative;overflow:hidden}
+  .bar .fill{position:absolute;top:0;bottom:0;border-radius:4px;transition:none}
+  .bar .center{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#2c3a4c}
+  input[type=range].ps{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:#0d1219;outline:none;cursor:pointer;margin-top:4px}
+  input[type=range].ps::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;border:none;cursor:pointer}
+  .ps-pink::-webkit-slider-thumb{background:var(--pink)}
+  .ps-gold::-webkit-slider-thumb{background:var(--gold)}
+  .ps-blue::-webkit-slider-thumb{background:var(--blue)}
+  .ro-inline{float:right;font-family:'JetBrains Mono';font-size:.72rem}
+  .live{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:-2px;letter-spacing:.04em}
+  .live .lk{color:var(--faint);margin-right:5px;text-transform:uppercase;letter-spacing:.1em;font-size:.5rem}
+  .gp-debug{background:var(--surface);border:1px solid var(--border-soft);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--text);display:flex;flex-direction:column;gap:12px}
+  .gp-debug .gpcard{background:#0d1219;border-radius:6px;padding:8px 12px}
+  .gp-debug .gpcard h4{margin:0 0 6px 0;font-size:.68rem;color:var(--blue);font-weight:500;letter-spacing:.05em}
+  .gp-debug .gpcard .meta{font-size:.55rem;color:var(--faint);margin-bottom:6px;letter-spacing:.04em}
+  .gp-debug .axes,.gp-debug .btns{display:grid;gap:3px 8px}
+  .gp-debug .axes{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .gp-debug .btns{grid-template-columns:repeat(auto-fill,minmax(50px,1fr));margin-top:6px}
+  .gp-debug .ax{display:flex;align-items:center;gap:6px;font-size:.62rem}
+  .gp-debug .ax .ai{color:var(--muted);width:32px}
+  .gp-debug .ax .av{color:var(--gold);width:48px;text-align:right}
+  .gp-debug .ax .abar{flex:1;height:5px;background:#1a2230;border-radius:3px;position:relative;overflow:hidden}
+  .gp-debug .ax .abar .ac{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#2c3a4c}
+  .gp-debug .ax .abar .af{position:absolute;top:0;bottom:0;background:var(--gold);border-radius:2px}
+  .gp-debug .ax.broken .ai{color:#ff7a6a}
+  .gp-debug .ax.broken .av{color:#ff7a6a;width:auto}
+  .gp-debug .ax.broken .abar{opacity:.3}
+  .gp-debug .bt{font-size:.55rem;padding:2px 5px;background:#1a2230;border-radius:3px;text-align:center;color:var(--muted)}
+  .gp-debug .bt.on{background:var(--blue);color:#fff}
+  .gp-debug .none{color:var(--faint);font-style:italic;font-size:.65rem}
+
+  .rowbtns{display:flex;gap:8px}
+  .mini{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);
+        font-family:'Inter';font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+        padding:7px;border-radius:6px;cursor:pointer;transition:.15s}
+  .mini:hover{color:var(--text);background:rgba(255,255,255,.03)}
+  .mini.active{color:var(--gold);border-color:var(--gold)}
+  .bindbtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px;cursor:pointer;float:right}
+  .listening{color:var(--gold)!important;border-color:var(--gold)!important;background:rgba(246,190,26,.12)!important}
+  .bound{color:var(--blue)!important;border-color:var(--blue)!important}
+  .modebtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:6px;cursor:pointer}
+  .modebtn.active{color:var(--blue);border-color:var(--blue);background:rgba(79,143,203,.12)}
+  .modebtn:disabled{opacity:.4;cursor:not-allowed}
+  .tunerow{display:flex;gap:4px;align-items:center;font-size:.55rem;margin-top:2px}
+  .tunerow .tlabel{color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-size:.5rem;width:14px}
+  .tunerow input{flex:1;width:0;min-width:0;background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:2px 5px;border-radius:4px;outline:none}
+  .grid.disabled{opacity:.35;pointer-events:none}
+  .cam-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .cam-pill{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border-soft);border-radius:8px;overflow:hidden}
+  .cam-btn{background:transparent;border:none;color:var(--text);font-family:'Inter';font-size:.78rem;padding:7px 13px;cursor:pointer}
+  .cam-btn.active{color:var(--blue);background:rgba(79,143,203,.12)}
+  .cam-pill .bindbtn{float:none;margin:0 4px;font-size:.5rem;padding:2px 6px}
+  .stopbtn{border-color:#c43c2e!important;color:#ff7a6a!important;background:rgba(196,60,46,.08)!important;font-weight:600;letter-spacing:.12em}
+  .stopbtn:hover{background:rgba(196,60,46,.22)!important;color:#fff!important}
+  .pos-panel{margin-top:6px;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .pos-panel .ptitle{font-size:.58rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;min-width:120px}
+  .pos-panel .pcoord{display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:.7rem}
+  .pos-panel .pcoord label{color:var(--muted);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;width:10px}
+  .pos-panel .pcoord input{width:64px;background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.68rem;padding:3px 6px;border-radius:4px;outline:none}
+  .pos-panel .pval{color:var(--blue);min-width:62px;text-align:right}
+  .pos-panel .pbtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:5px;cursor:pointer}
+  .pos-panel .pbtn:hover{color:var(--text);border-color:var(--blue-deep)}
+  .pos-panel .pbtn.zero{color:#ff9b8c;border-color:#7d3a31}
+  .pos-panel.disabled{opacity:.35;pointer-events:none}
+  .custom-lens{display:flex;flex-direction:column;gap:8px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:8px;padding:10px;margin-top:6px}
+  .custom-lens input[type=text]{background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'Inter';font-size:.75rem;padding:6px 8px;border-radius:5px;outline:none}
+  .custom-lens input[type=number]{background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:4px 6px;border-radius:5px;outline:none;width:70px;margin-left:6px}
+  .custom-lens label{font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:inline-flex;align-items:center;gap:0}
+  .custom-lens .cl-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+
+  .panel{background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;
+         padding:16px;display:flex;flex-direction:column;gap:13px}
+  .field2{display:flex;flex-direction:column;gap:6px}
+  .field2 label{font-size:.6rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  select{background:#0d1219;border:1px solid var(--border);color:var(--text);
+         font-family:'Inter';font-size:.88rem;padding:9px 11px;border-radius:8px;outline:none;cursor:pointer}
+  select:focus{border-color:var(--gold)}
+  .btn{background:transparent;border:1px solid var(--gold);color:var(--gold);
+       font-family:'Inter';font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+       padding:9px 14px;border-radius:8px;cursor:pointer}
+  .readouts{display:flex;gap:10px}
+  .ro{flex:1;background:var(--surface2);border-radius:8px;padding:10px 12px}
+  .ro .k{font-size:.56rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  .ro .n{font-family:'JetBrains Mono';font-size:1.05rem;font-weight:500;margin-top:3px}
+  .crane-chip{font-size:.66rem;color:var(--blue);background:#0d1219;border:1px solid var(--blue-deep);
+              padding:7px 13px;border-radius:8px;align-self:center}
+
+  .log-wrap{margin-top:4px}
+  .log-head{font-size:.6rem;letter-spacing:.16em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+  .log{background:var(--surface);border:1px solid var(--border-soft);border-radius:8px;
+       height:120px;overflow-y:auto;font-family:'JetBrains Mono';font-size:.62rem;padding:8px 12px}
+  .log-entry{display:flex;justify-content:space-between;gap:12px;padding:2px 0;color:var(--muted)}
+  .log-entry .p{color:var(--blue)} .log-entry .v{color:var(--gold)}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--border-soft);padding-top:12px}
+  .sw{display:flex;align-items:center;gap:7px;font-size:.6rem;color:var(--faint)}
+  .sw .chip{width:24px;height:13px;border-radius:4px}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <img src="rexyOSC.png" alt="Rexy OSC" class="logo-main">
+      <img src="bridge_logo.png" alt="bridge" class="logo-bridge">
+    </div>
+    <div class="status">
+      <div class="item"><span class="dot" id="hid-dot"></span><span id="hid-status">HARDWARE OFFLINE</span></div>
+      <div class="item"><span class="dot warn" id="ws-dot"></span><span id="ws-status">WS OFFLINE</span></div>
+      <div class="item"><span class="dot" id="rc-dot"></span><span id="rc-status">UE RC</span></div>
+      <div class="item" style="gap:6px">
+        <span style="font-size:.55rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase">Units</span>
+        <button class="modebtn" id="units-metric"   onclick="setUnits('metric')">m / cm</button>
+        <button class="modebtn" id="units-imperial" onclick="setUnits('imperial')">ft / in</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="config">
+    <div class="field"><label>Script Host</label><input id="cfg-ws-host" value="127.0.0.1"></div>
+    <div class="field"><label>WS Port</label><input id="cfg-ws-port" class="narrow" value="9000"></div>
+    <div class="field"><label>UE5 Host</label><input id="cfg-ue5-host" value="127.0.0.1"></div>
+    <div class="field"><label>UE5 OSC Port</label><input id="cfg-ue5-port" class="narrow" value="8000"></div>
+    <div class="field"><label>Base Path</label><input id="cfg-base" value="/rexy"></div>
+    <div class="field" style="margin-left:auto;align-self:center">
+      <label>Config</label>
+      <div style="display:flex;gap:8px">
+        <button class="bindbtn" style="float:none" onclick="exportConfig()">Export</button>
+        <button class="bindbtn" style="float:none" onclick="document.getElementById('cfg-import').click()">Import</button>
+        <input type="file" id="cfg-import" accept=".json,application/json" style="display:none" onchange="importConfig(this.files[0])">
+      </div>
+    </div>
+  </div>
+
+  <div class="config" style="gap:14px;align-items:center">
+    <div class="field" style="flex:1;max-width:340px"><label>Active camera</label>
+      <div id="cam-row" class="cam-row"><span style="color:var(--muted);font-size:.7rem">— connect to scan —</span></div></div>
+    <button class="bindbtn" style="float:none;align-self:center" onclick="scanCameras()">Rescan</button>
+  </div>
+
+  <!-- WHEELS -->
+  <div class="section-label lbl-wheels">Rexy Wheels — camera head
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button class="modebtn active" id="wmode-absolute"   onclick="setWheelMode('absolute')">Absolute</button>
+      <button class="modebtn"        id="wmode-continuous" onclick="setWheelMode('continuous')">Continuous</button>
+    </span>
+  </div>
+  <div class="grid g3" id="wheels-grid"></div>
+
+  <!-- FUNCTIONS -->
+  <div class="section-label lbl-functions">Functions</div>
+  <div class="func-panel">
+    <div class="func-card" id="fc-autolevel">
+      <span class="func-name">Autolevel Roll</span>
+      <button class="bindbtn" style="float:none" onclick="triggerAutolevel()">Trigger</button>
+      <button class="bindbtn" style="float:none" id="bind-fn-autolevel"
+              onclick="startBindFunction('autolevel')"
+              oncontextmenu="clearBindFunction('autolevel');return false;"
+              title="Bind a key or gamepad button to trigger autolevel. Right-click to clear.">Bind</button>
+      <span class="tlabel">Time (s)</span>
+      <input id="auto-speed"   type="number" step="0.1"  min="0.1" max="10"  value="1.5" onchange="persistAutolevelTuning()" title="Seconds to ramp roll to 0°">
+      <span class="tlabel">F</span>
+      <input id="auto-feather" type="number" step="0.05" min="0"   max="0.95" value="0.5" onchange="persistAutolevelTuning()" title="Easing curve. 0=linear ramp; higher=smoothstep ease in/out">
+    </div>
+  </div>
+
+  <!-- FOCUS -->
+  <div class="section-label lbl-focus">Rexy Focus — lens &amp; body
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span style="font-size:.55rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase">Focus units</span>
+      <button class="modebtn" id="funits-metric"   onclick="setFocusUnits('metric')">m / cm</button>
+      <button class="modebtn" id="funits-imperial" onclick="setFocusUnits('imperial')">ft / in</button>
+    </span>
+  </div>
+  <div class="grid g2">
+    <div class="panel">
+      <div class="field2"><label>Camera body / filmback</label>
+        <select id="sel-filmback"></select></div>
+      <div class="field2"><label>Lens</label>
+        <select id="sel-lens"></select></div>
+      <button class="btn" id="btn-custom-lens" onclick="toggleCustomLens()">+ Add custom lens</button>
+      <div id="custom-lens-form" class="custom-lens" style="display:none">
+        <input id="cl-name"     type="text"   placeholder="Name (e.g. 75mm Prime f/1.8)">
+        <div class="cl-row">
+          <label>Focal min<input id="cl-fmin" type="number" step="1"   value="50"></label>
+          <label>Focal max<input id="cl-fmax" type="number" step="1"   value="50"></label>
+        </div>
+        <div class="cl-row">
+          <label>f-stop min<input id="cl-amin" type="number" step="0.1" value="1.8"></label>
+          <label>f-stop max<input id="cl-amax" type="number" step="0.1" value="22"></label>
+        </div>
+        <div class="cl-row">
+          <label>Min focus (cm)<input id="cl-focus" type="number" step="1" value="50"></label>
+          <span style="display:flex;gap:6px;align-self:end">
+            <button class="bindbtn" style="float:none" onclick="saveCustomLens()">Save</button>
+            <button class="bindbtn" style="float:none" onclick="toggleCustomLens()">Cancel</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="field2"><label>Zoom <button class="bindbtn" id="bind-zoom" onclick="startBind('zoom')" oncontextmenu="clearBind('zoom');return false;">Bind</button><span class="ro-inline v-gold" id="ro-zoom">0.500</span></label>
+        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-zoom" class="ps ps-gold" oninput="onSlider('zoom',this.value)"></div>
+      <div class="field2"><label>Aperture <button class="bindbtn" id="bind-aperture" onclick="startBind('aperture')" oncontextmenu="clearBind('aperture');return false;">Bind</button><span class="ro-inline v-gold" id="ro-aperture">0.500</span></label>
+        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-aperture" class="ps ps-gold" oninput="onSlider('aperture',this.value)"></div>
+      <div class="field2"><label>Focus <button class="bindbtn" id="bind-focus" onclick="startBind('focus')" oncontextmenu="clearBind('focus');return false;">Bind</button><span class="ro-inline v-gold" id="ro-focus">0.500</span></label>
+        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-focus" class="ps ps-gold" oninput="onSlider('focus',this.value)"></div>
+    </div>
+  </div>
+
+  <!-- GRIP -->
+  <div class="section-label lbl-grip">Rexy Grip
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button class="modebtn active" id="mode-crane" onclick="setGripMode('crane')">Crane</button>
+      <button class="modebtn" id="mode-dolly" onclick="setGripMode('dolly')">Dolly</button>
+      <button class="modebtn" id="mode-drone" onclick="setGripMode('drone')">Drone</button>
+    </span>
+  </div>
+  <div class="grid g3" id="grip-grid"></div>
+  <div id="cam-pos-panel" class="pos-panel"></div>
+  <div class="grid g3" id="base-grid"></div>
+  <div id="crane-pos-panel" class="pos-panel"></div>
+
+  <!-- GAMEPAD DEBUG -->
+  <div class="log-wrap">
+    <div class="log-head" style="display:flex;align-items:center;gap:10px">
+      Gamepad Debug
+      <button class="bindbtn" style="float:none" onclick="toggleGpDebug()" id="gp-toggle">Show</button>
+      <button class="bindbtn" style="float:none" onclick="calibrateAxes()" id="gp-cal-btn" title="Sample all axes for 5s and store the average as zero — eliminates PS4 stick drift">Null Drift (5s)</button>
+      <button class="bindbtn" style="float:none" onclick="clearAxisCalibration()" id="gp-clr-btn" title="Clear the stored zero offsets">Clear Cal</button>
+      <span id="gp-cal-status" style="color:var(--faint);font-size:.55rem;letter-spacing:.05em;text-transform:none">Spin a wheel or move a stick — values update live</span>
+    </div>
+    <div class="gp-debug" id="gp-debug" style="display:none"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-wrap">
+    <div class="log-head">OSC output</div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="legend">
+    <div class="sw"><span class="chip" style="background:var(--pink)"></span>Wheels</div>
+    <div class="sw"><span class="chip" style="background:var(--gold)"></span>Focus</div>
+    <div class="sw"><span class="chip" style="background:var(--blue)"></span>Grip</div>
+  </div>
+
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────────
+const wheels = {
+  pan:  { label:'Pan',  value:0.5, held:false },
+  tilt: { label:'Tilt', value:0.5, held:false },
+  roll: { label:'Roll', value:0.5, held:false },
+};
+const grip = {
+  craneYaw:   { label:'Crane Yaw',   value:0.5 },
+  cranePitch: { label:'Crane Pitch', value:0.5 },
+  scope:      { label:'Scope',       value:0.0 },
+  baseX:      { label:'Base X',      value:0.5 },
+  baseY:      { label:'Base Y',      value:0.5 },
+  baseZ:      { label:'Base Z',      value:0.5 },
+};
+let socket=null, retryTimer=null;
+
+// Built-in UE presets (mirrors UE's lists; will be fetched live via GetLensPresetsCopy later)
+const FILMBACKS = ['16:9 Digital Film','Super 35mm','35mm Academy','35mm Full Aperture',
+                   'IMAX 70mm','Super 16mm','APS-C (Canon)','Full Frame DSLR','Micro Four Thirds'];
+// LENSES_DATA carries the actual lens specs. Every lens (built-in OR custom) flows
+// through apply_custom_lens on the bridge, which writes LensSettings directly on
+// the camera AND re-scopes the zoom/aperture/focus mappings. Primes have
+// min_focal == max_focal so zoom is effectively locked.
+const LENSES_DATA = {
+  '12mm Prime f/2.8':   { min_focal:  12, max_focal:  12, min_aperture: 2.8, max_aperture: 22, min_focus:  30 },
+  '30mm Prime f/1.4':   { min_focal:  30, max_focal:  30, min_aperture: 1.4, max_aperture: 22, min_focus:  30 },
+  '50mm Prime f/1.8':   { min_focal:  50, max_focal:  50, min_aperture: 1.8, max_aperture: 22, min_focus:  45 },
+  '85mm Prime f/1.8':   { min_focal:  85, max_focal:  85, min_aperture: 1.8, max_aperture: 22, min_focus:  80 },
+  '105mm Prime f/2':    { min_focal: 105, max_focal: 105, min_aperture: 2.0, max_aperture: 22, min_focus: 100 },
+  '200mm Prime f/2':    { min_focal: 200, max_focal: 200, min_aperture: 2.0, max_aperture: 22, min_focus: 190 },
+  '24-70mm Zoom f/2.8': { min_focal:  24, max_focal:  70, min_aperture: 2.8, max_aperture: 22, min_focus:  38 },
+  '70-200mm Zoom f/2.8':{ min_focal:  70, max_focal: 200, min_aperture: 2.8, max_aperture: 22, min_focus: 120 },
+  'Universal Zoom':     { min_focal:  18, max_focal: 200, min_aperture: 1.8, max_aperture: 22, min_focus:  30 },
+};
+const LENSES = Object.keys(LENSES_DATA);
+
+// ── Build cards ─────────────────────────────────────────────────────────────
+function wheelCard(id,accent){
+  const w=wheels[id];
+  return `<div class="card accent-${accent}">
+    <div class="head"><span class="name">${w.label}</span><span class="osc">/rexy/${id}</span></div>
+    <div class="val v-${accent}" id="val-${id}">0.500</div>
+    <div class="live" id="live-${id}">live —</div>
+    <div class="bar"><span class="center"></span><span class="fill" id="bar-${id}" style="background:var(--${accent})"></span></div>
+    <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-${id}" class="ps ps-${accent}" oninput="onSlider('${id}',this.value)">
+    <div class="rowbtns">
+      <button class="mini" id="bind-${id}" onclick="startBind('${id}')" oncontextmenu="clearBind('${id}');return false;">Bind</button>
+      <button class="mini" id="hold-${id}" onclick="toggleHold('${id}')">Hold</button>
+      <button class="mini" onclick="doReset('${id}')">Reset</button>
+    </div>
+    <div class="tunerow">
+      <span class="tlabel">S</span><input type="number" id="sens-${id}" value="1.0" step="0.1" min="0.1" max="5" onchange="sendParamTuning('${id}')" title="Sensitivity: linear multiplier on input rate">
+      <span class="tlabel">C</span><input type="number" id="curve-${id}" value="1.5" step="0.1" min="0.5" max="3" onchange="sendParamTuning('${id}')" title="Curve: response gamma on axis input. 1.0=linear; higher=fluid-head feel (slow wheel → very slow camera, fast wheel → fast camera)">
+      <span class="tlabel">D</span><input type="number" id="dead-${id}" value="0" step="0.01" min="0" max="0.4" onchange="sendParamTuning('${id}')" title="Deadband: ignore tiny inputs near centre">
+      <span class="tlabel">F</span><input type="number" id="feat-${id}" value="0" step="0.05" min="0" max="0.99" onchange="sendParamTuning('${id}')" title="Feather: smooths input start/stop. 0=instant, higher=slower ramp">
+    </div>
+    <div class="tunerow">
+      <span class="tlabel" id="lmin-${id}">Min</span><input type="number" id="min-${id}" step="any" onchange="applyRangeInput('${id}')">
+      <span class="tlabel" id="lmax-${id}">Max</span><input type="number" id="max-${id}" step="any" onchange="applyRangeInput('${id}')">
+    </div></div>`;
+}
+function gripCard(id){
+  const g=grip[id];
+  return `<div class="card accent-blue">
+    <div class="head"><span class="name" id="name-${id}">${g.label}</span><span class="osc">/rexy/${id}</span></div>
+    <div class="val v-blue" id="val-${id}">—</div>
+    <div class="live" id="live-${id}">live —</div>
+    <div class="bar"><span class="center"></span><span class="fill" id="bar-${id}" style="background:var(--blue)"></span></div>
+    <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-${id}" class="ps ps-blue" oninput="onSlider('${id}',this.value)">
+    <div class="rowbtns">
+      <button class="mini" id="bind-${id}" onclick="startBind('${id}')" oncontextmenu="clearBind('${id}');return false;">Bind</button>
+      <button class="mini" onclick="doReset('${id}')">Reset</button>
+    </div>
+    <div class="tunerow">
+      <span class="tlabel">S</span><input type="number" id="sens-${id}" value="1.0" step="0.1" min="0.1" max="5" onchange="sendParamTuning('${id}')" title="Sensitivity: linear multiplier on input rate">
+      <span class="tlabel">C</span><input type="number" id="curve-${id}" value="1.5" step="0.1" min="0.5" max="3" onchange="sendParamTuning('${id}')" title="Curve: response gamma on axis input. 1.0=linear; higher=fluid-head feel (slow wheel → very slow camera, fast wheel → fast camera)">
+      <span class="tlabel">D</span><input type="number" id="dead-${id}" value="0" step="0.01" min="0" max="0.4" onchange="sendParamTuning('${id}')" title="Deadband: ignore tiny inputs near centre">
+      <span class="tlabel">F</span><input type="number" id="feat-${id}" value="0" step="0.05" min="0" max="0.99" onchange="sendParamTuning('${id}')" title="Feather: smooths input start/stop. 0=instant, higher=slower ramp">
+    </div>
+    <div class="tunerow">
+      <span class="tlabel" id="lmin-${id}">Min</span><input type="number" id="min-${id}" step="any" onchange="applyRangeInput('${id}')">
+      <span class="tlabel" id="lmax-${id}">Max</span><input type="number" id="max-${id}" step="any" onchange="applyRangeInput('${id}')">
+    </div>
+    </div>`;
+}
+document.getElementById('wheels-grid').innerHTML =
+  wheelCard('pan','pink')+wheelCard('tilt','pink')+wheelCard('roll','pink');
+document.getElementById('grip-grid').innerHTML =
+  gripCard('craneYaw')+gripCard('scope')+gripCard('cranePitch');
+document.getElementById('base-grid').innerHTML =
+  gripCard('baseX')+gripCard('baseY')+gripCard('baseZ');
+
+// dropdowns
+const selF=document.getElementById('sel-filmback');
+FILMBACKS.forEach(n=>selF.add(new Option(n,n)));
+const selL=document.getElementById('sel-lens');
+LENSES.forEach(n=>selL.add(new Option(n,n)));
+selL.value='24-70mm Zoom f/2.8';
+selL.onchange=()=>applyLensSelection(selL.value);
+selF.onchange=()=>{ logMsg('Filmback → '+selF.value); sendPreset('filmback_preset', selF.value); };
+
+// ── Units, formatting, modes ─────────────────────────────────────────────────
+// Distance readouts honour the user's m / ft preference (persisted). Angles are
+// always degrees; mm focal length and f-stops are unitless.
+let unitSystem  = localStorage.getItem('rexy_units')       || 'metric';
+// Focus pullers traditionally work in ft/in regardless of the overall units.
+// Stored separately so the user can have e.g. distances=metric but focus=imperial.
+let focusUnits  = localStorage.getItem('rexy_focus_units') || unitSystem;
+let currentWheelMode = 'absolute';
+
+// Bridge constants (mirror ue5_rc_listener.py — keep in sync if those change).
+const DRONE_VEL_CMS  = 120.0;   // m=1.2 m/s peak at sens 1
+const BASE_VEL_CMS   = 200.0;   // 2.0 m/s peak
+const WHEEL_VEL_DEGS = 90.0;    // 90°/s peak
+
+// Per-parameter output ranges. Defaults mirror mappings.json. Each card has
+// Min/Max inputs that override the defaults at runtime; overrides persist in
+// localStorage AND get pushed to the bridge via `param_range` so the slider
+// scaling on both sides stays in sync.
+const PARAM_RANGES_DEFAULT = {
+  pan:       { out_min:-180, out_max: 180, unit:'°',  bipolar:true  },
+  tilt:      { out_min: -90, out_max:  90, unit:'°',  bipolar:true  },
+  roll:      { out_min: -45, out_max:  45, unit:'°',  bipolar:true  },
+  zoom:      { out_min:  24, out_max: 120, unit:'mm', bipolar:false },
+  aperture:  { out_min: 1.4, out_max:  16, unit:'f/', bipolar:false },
+  focus:     { out_min:  30, out_max:100000, unit:'cm', bipolar:false, scaleType:'log' },  // log scale so slider has useful range across 30cm to ∞
+  craneYaw:  { out_min:-180, out_max: 180, unit:'°',  bipolar:true  },
+  cranePitch:{ out_min: -45, out_max:  45, unit:'°',  bipolar:true  },
+  scope:     { out_min: 100, out_max:1000, unit:'cm', bipolar:false },
+  baseX:     { out_min:-1200,out_max:-200, unit:'cm', bipolar:true  },
+  baseY:     { out_min:-730, out_max: 270, unit:'cm', bipolar:true  },
+  baseZ:     { out_min:   0, out_max:1000, unit:'cm', bipolar:false }
+};
+const PARAM_RANGES = JSON.parse(JSON.stringify(PARAM_RANGES_DEFAULT));
+// Merge any persisted overrides on top
+try{
+  const overrides=JSON.parse(localStorage.getItem('rexy_param_ranges')||'{}');
+  for(const k in overrides){ if(PARAM_RANGES[k]) Object.assign(PARAM_RANGES[k], overrides[k]); }
+}catch(e){}
+function persistParamRanges(){
+  const overrides={};
+  for(const k in PARAM_RANGES){
+    const d=PARAM_RANGES_DEFAULT[k];
+    const r=PARAM_RANGES[k];
+    if(d && (r.out_min!==d.out_min || r.out_max!==d.out_max)){
+      overrides[k]={ out_min:r.out_min, out_max:r.out_max };
+    }
+  }
+  localStorage.setItem('rexy_param_ranges', JSON.stringify(overrides));
+}
+function sendParamRange(id){
+  const r=PARAM_RANGES[id]; if(!r) return;
+  if(socket&&socket.readyState===WebSocket.OPEN)
+    socket.send(JSON.stringify({type:'param_range', path:'/rexy/'+id,
+                                out_min:r.out_min, out_max:r.out_max}));
+}
+function pushAllParamRanges(){ for(const id in PARAM_RANGES) sendParamRange(id); }
+// Distance params (focus, scope, baseX/Y/Z) store cm internally but display ft
+// when imperial units are active. Other params are unit-natural (deg, mm, f-stop).
+// Per-param effective unit system. Focus has its own (focusUnits) so a focus puller
+// can have ft/in while everything else is m/cm.
+function paramUnitSystem(id){ return id==='focus' ? focusUnits : unitSystem; }
+function rangeDisplayUnit(id, unit){
+  if(unit==='cm') return paramUnitSystem(id)==='imperial' ? 'ft' : 'cm';
+  return unit;                          // °, mm, f/ — no conversion
+}
+function rangeToDisplay(id, cmValue){
+  const r=PARAM_RANGES[id]; if(!r) return cmValue;
+  if(r.unit==='cm' && paramUnitSystem(id)==='imperial') return cmValue / 30.48;
+  return cmValue;
+}
+function rangeFromDisplay(id, displayValue){
+  const r=PARAM_RANGES[id]; if(!r) return displayValue;
+  if(r.unit==='cm' && paramUnitSystem(id)==='imperial') return displayValue * 30.48;
+  return displayValue;
+}
+function rangeLabel(prefix, id, unit){ return `${prefix} (${rangeDisplayUnit(id, unit)})`; }
+function refreshRangeLabels(){
+  for(const id in PARAM_RANGES){
+    const r=PARAM_RANGES[id];
+    const lmin=document.getElementById('lmin-'+id); if(lmin) lmin.textContent=rangeLabel('Min', id, r.unit);
+    const lmax=document.getElementById('lmax-'+id); if(lmax) lmax.textContent=rangeLabel('Max', id, r.unit);
+  }
+}
+function refreshRangeInputs(){
+  for(const id in PARAM_RANGES){
+    const r=PARAM_RANGES[id];
+    const minEl=document.getElementById('min-'+id), maxEl=document.getElementById('max-'+id);
+    // Skip whichever input the user is editing — don't clobber mid-type
+    const useImperial = (r.unit==='cm' && paramUnitSystem(id)==='imperial');
+    if(minEl && document.activeElement!==minEl){
+      const v=rangeToDisplay(id, r.out_min);
+      minEl.value = useImperial ? v.toFixed(2) : v;
+    }
+    if(maxEl && document.activeElement!==maxEl){
+      const v=rangeToDisplay(id, r.out_max);
+      maxEl.value = useImperial ? v.toFixed(2) : v;
+    }
+  }
+}
+function applyRangeInput(id){
+  const r=PARAM_RANGES[id]; if(!r) return;
+  const minEl=document.getElementById('min-'+id), maxEl=document.getElementById('max-'+id);
+  if(minEl && minEl.value!==''){ const mn=parseFloat(minEl.value); if(isFinite(mn)) r.out_min = rangeFromDisplay(id, mn); }
+  if(maxEl && maxEl.value!==''){ const mx=parseFloat(maxEl.value); if(isFinite(mx)) r.out_max = rangeFromDisplay(id, mx); }
+  persistParamRanges();
+  sendParamRange(id);
+  updateBar(id, getParam(id));                       // refresh the Commanded readout
+}
+
+function fmtDist(cm, signed, sys){
+  // cm → ft+in or m/cm depending on unit preference. `signed` adds a + prefix.
+  // `sys` overrides the global unit system (used for focus, which has its own toggle).
+  const u = sys || unitSystem;
+  const sign = (signed && cm>=0) ? '+' : (cm<0 ? '-' : (signed?'+':''));
+  const abs = Math.abs(cm);
+  if(u==='imperial'){
+    const inches = abs/2.54;
+    if(inches < 24) return sign + inches.toFixed(1) + '"';
+    const ft = Math.floor(inches/12), inch = Math.round(inches-ft*12);
+    return sign + ft + "'" + inch + '"';
+  }
+  if(abs >= 100) return sign + (abs/100).toFixed(2) + 'm';
+  return sign + abs.toFixed(0) + 'cm';
+}
+function fmtSpeed(cmPerSec){
+  // signed velocity readout. always "+/-X.XX <unit>/s"
+  if(unitSystem==='imperial'){
+    const fps = cmPerSec / 30.48;                      // 1 ft = 30.48 cm
+    return (fps>=0?'+':'') + fps.toFixed(2) + ' ft/s';
+  }
+  const mps = cmPerSec / 100.0;
+  return (mps>=0?'+':'') + mps.toFixed(2) + ' m/s';
+}
+function fmtDeg(v, totalRange){ const d=(v-0.5)*totalRange; return (d>=0?'+':'')+d.toFixed(1)+'°'; }
+function fmtAbsDeg(d){ return (d>=0?'+':'')+d.toFixed(1)+'°'; }
+
+// Compute commanded velocity (cm/s or deg/s) from a slider value + tuning.
+// Mirrors the bridge's _velocity_delta shape: deadband + sign × ((|t|−d)/(1−d))² × max × sens.
+function velocityFromSlider(id, v, maxRate){
+  const sEl=document.getElementById('sens-'+id), dEl=document.getElementById('dead-'+id);
+  const sens = sEl ? (parseFloat(sEl.value)||1.0) : 1.0;
+  const dead = dEl ? (parseFloat(dEl.value)||0.08) : 0.08;
+  const t = (v-0.5)*2;
+  if(Math.abs(t) <= dead) return 0;
+  const sign = t>0 ? 1 : -1;
+  const norm = (Math.abs(t)-dead) / Math.max(1e-6, 1-dead);
+  return sign * (norm*norm) * maxRate * sens;
+}
+
+// Primary "commanded" readout. Returns what the slider is asking for, in the
+// right units for the current mode.
+function formatReadout(id, v){
+  // Velocity modes — show m/s or ft/s (or deg/s for continuous wheels)
+  if(['baseX','baseY','baseZ'].includes(id)){
+    return fmtSpeed(velocityFromSlider(id, v, BASE_VEL_CMS));
+  }
+  if(['craneYaw','cranePitch','scope'].includes(id) && currentGripMode==='drone'){
+    return fmtSpeed(velocityFromSlider(id, v, DRONE_VEL_CMS));
+  }
+  // Dolly mode: the three grip axes write to the camera's local RelativeLocation
+  // (cm), bipolar — same convention as base XYZ. Display as signed distance, not
+  // degrees (the PARAM_RANGES default for craneYaw/cranePitch).
+  if(['craneYaw','cranePitch','scope'].includes(id) && currentGripMode==='dolly'){
+    const delta = (v - 0.5) * 1000;                            // mirror bridge ±500cm range
+    return fmtDist(delta, true);
+  }
+  if(['pan','tilt','roll'].includes(id) && currentWheelMode==='continuous'){
+    const dps = velocityFromSlider(id, v, WHEEL_VEL_DEGS);
+    return (dps>=0?'+':'')+dps.toFixed(1)+'°/s';
+  }
+  // Absolute mode — ranges from PARAM_RANGES (user-editable via each card's Min/Max row).
+  const r = PARAM_RANGES[id];
+  if(!r) return v.toFixed(3);
+  const total = r.out_max - r.out_min;
+  if(r.bipolar){
+    const delta = (v - 0.5) * total;
+    if(r.unit==='°')  return (delta>=0?'+':'')+delta.toFixed(1)+'°';
+    if(r.unit==='cm') return fmtDist(delta, true);
+    return (delta>=0?'+':'')+delta.toFixed(2);
+  }
+  // Unipolar absolute. Log scale (focus only) gives useful slider range across
+  // many orders of magnitude (30cm to 1km on focus). Linear for everything else.
+  let val;
+  if(r.scaleType === 'log' && r.out_min > 0){
+    const logMin = Math.log(r.out_min), logMax = Math.log(r.out_max);
+    val = Math.exp(logMin + v * (logMax - logMin));
+  } else {
+    val = r.out_min + v * total;
+  }
+  if(r.unit==='mm') return val.toFixed(0)+'mm';
+  if(r.unit==='f/') return 'f/'+val.toFixed(1);
+  if(r.unit==='cm'){
+    // Focus convention: anything past 500m reads as ∞ (camera focused at infinity).
+    if(id==='focus' && val >= 50000) return '∞';
+    // Focus uses its OWN unit preference (focus pullers often work in ft regardless of overall units)
+    if(id==='focus') return fmtDist(val, false, focusUnits);
+    return fmtDist(val, false);
+  }
+  return val.toFixed(2);
+}
+
+// Secondary "live" readout: what UE actually reads back.
+// Populated from the bridge's periodic 'locations' broadcast.
+const liveState = { camera:null, camera_rot:null, crane:null };
+function setLiveText(id, txt){
+  const el=document.getElementById('live-'+id); if(el) el.textContent='LIVE  '+txt;
+}
+function refreshAllLive(){
+  // Wheels — read camera rotation if we have it
+  if(liveState.camera_rot){
+    setLiveText('pan',  fmtAbsDeg(liveState.camera_rot.Yaw  || 0));
+    setLiveText('tilt', fmtAbsDeg(liveState.camera_rot.Pitch|| 0));
+    setLiveText('roll', fmtAbsDeg(liveState.camera_rot.Roll || 0));
+  }
+  // Grip in drone mode — show camera local position. In dolly mode same source. Crane mode: best-effort.
+  if(liveState.camera){
+    // User axis convention: X=sideways(UE Y), Y=fwd/back(UE X), Z=up/down(UE Z)
+    const cam=liveState.camera;
+    setLiveText('craneYaw',   'X '+fmtDist(cam.Y, true));
+    setLiveText('scope',      'Y '+fmtDist(cam.X, true));
+    setLiveText('cranePitch', 'Z '+fmtDist(cam.Z, true));
+  }
+  // Base — crane transform location, real X/Y/Z
+  if(liveState.crane){
+    const cr=liveState.crane;
+    setLiveText('baseX', 'X '+fmtDist(cr.X, true));
+    setLiveText('baseY', 'Y '+fmtDist(cr.Y, true));
+    setLiveText('baseZ', 'Z '+fmtDist(cr.Z, true));
+  }
+}
+
+function setUnits(u){
+  unitSystem = (u==='imperial') ? 'imperial' : 'metric';
+  localStorage.setItem('rexy_units', unitSystem);
+  document.getElementById('units-metric'  ).classList.toggle('active', unitSystem==='metric');
+  document.getElementById('units-imperial').classList.toggle('active', unitSystem==='imperial');
+  // Re-render all readouts (commanded + live) using the new unit system
+  PARAMS.forEach(p=>updateBar(p, getParam(p)));
+  refreshAllLive();
+  refreshRangeLabels();                              // "Min (cm)" ↔ "Min (ft)"
+  refreshRangeInputs();                              // numeric values converted
+  if(typeof updateLocations==='function' && lastPos){
+    updateLocations({camera:lastPos.camera, crane:lastPos.crane});
+  }
+}
+function setFocusUnits(u){
+  focusUnits = (u==='imperial') ? 'imperial' : 'metric';
+  localStorage.setItem('rexy_focus_units', focusUnits);
+  const m=document.getElementById('funits-metric'),   i=document.getElementById('funits-imperial');
+  if(m) m.classList.toggle('active', focusUnits==='metric');
+  if(i) i.classList.toggle('active', focusUnits==='imperial');
+  // Only focus needs its readout/range refreshed
+  updateBar('focus', getParam('focus'));
+  const lmin=document.getElementById('lmin-focus'); if(lmin) lmin.textContent=rangeLabel('Min','focus',PARAM_RANGES.focus.unit);
+  const lmax=document.getElementById('lmax-focus'); if(lmax) lmax.textContent=rangeLabel('Max','focus',PARAM_RANGES.focus.unit);
+  const minEl=document.getElementById('min-focus'), maxEl=document.getElementById('max-focus');
+  const useImperial = focusUnits==='imperial';
+  if(minEl && document.activeElement!==minEl){ const v=rangeToDisplay('focus',PARAM_RANGES.focus.out_min); minEl.value = useImperial ? v.toFixed(2) : v; }
+  if(maxEl && document.activeElement!==maxEl){ const v=rangeToDisplay('focus',PARAM_RANGES.focus.out_max); maxEl.value = useImperial ? v.toFixed(2) : v; }
+}
+
+function setWheelMode(mode){
+  currentWheelMode = (mode==='continuous') ? 'continuous' : 'absolute';
+  document.getElementById('wmode-absolute'  ).classList.toggle('active', currentWheelMode==='absolute');
+  document.getElementById('wmode-continuous').classList.toggle('active', currentWheelMode==='continuous');
+  if(socket&&socket.readyState===WebSocket.OPEN)
+    socket.send(JSON.stringify({type:'wheel_mode', mode:currentWheelMode}));
+  // Refresh wheel readouts because formatting changes (deg vs deg/s)
+  ['pan','tilt','roll'].forEach(p=>updateBar(p, getParam(p)));
+  logMsg('Wheel mode → '+currentWheelMode);
+}
+function updateBar(id,value){
+  const bar=document.getElementById('bar-'+id);
+  const val=document.getElementById('val-'+id);
+  const ro =document.getElementById('ro-'+id);
+  const s  =document.getElementById('slider-'+id);
+  if(typeof paramVal!=='undefined') paramVal[id]=value;
+  if(s && document.activeElement!==s) s.value=value;        // sync slider, but don't fight an active drag
+  const txt=formatReadout(id, value);
+  if(val) val.textContent=txt;
+  if(ro)  ro.textContent =txt;
+  if(bar){
+    const dev=value-0.5;
+    if(bar.parentElement.querySelector('.center')){          // bipolar bar
+      if(dev>=0){ bar.style.left='50%'; bar.style.right='auto'; bar.style.width=(dev*100)+'%'; }
+      else      { bar.style.right='50%'; bar.style.left='auto'; bar.style.width=(-dev*100)+'%'; }
+    } else { bar.style.left='0'; bar.style.width=(value*100)+'%'; }
+  }
+  if(wheels[id]) wheels[id].value=value;
+  if(grip[id])   grip[id].value=value;
+}
+
+// ── Slider drag → drive UE via the middleware's osc_send (forwards to the bridge) ──
+function onSlider(id,v){
+  v=parseFloat(v);
+  updateBar(id,v);                                  // updates bar-id + val-id (and ro-) via formatReadout
+  sendOsc('/rexy/'+id,v);
+}
+function sendOsc(path,value){
+  if(socket&&socket.readyState===WebSocket.OPEN)
+    socket.send(JSON.stringify({type:'osc_send',path:path,value:value}));
+}
+function sendPreset(type,name){
+  if(socket&&socket.readyState===WebSocket.OPEN)
+    socket.send(JSON.stringify({type:type,name:name}));
+}
+// Global tuning is now a quiet fallback (per-param tuning supersedes it for
+// any param that has explicit sens/dead). Reads from optional tune-sens/tune-dead
+// inputs if they exist; otherwise uses safe defaults.
+function sendTuning(){
+  const sEl=document.getElementById('tune-sens'), dEl=document.getElementById('tune-dead');
+  const sens=sEl?parseFloat(sEl.value)||1.0:1.0;
+  const dead=dEl?parseFloat(dEl.value)||0.08:0.08;
+  if(socket&&socket.readyState===WebSocket.OPEN)
+    socket.send(JSON.stringify({type:'tuning',sensitivity:sens,deadband:dead}));
+}
+function sendParamTuning(id){
+  const sEl=document.getElementById('sens-'+id), dEl=document.getElementById('dead-'+id);
+  if(!sEl||!dEl) return;
+  const sParsed=parseFloat(sEl.value), dParsed=parseFloat(dEl.value);
+  const sens = isNaN(sParsed) ? 1.0 : sParsed;
+  const dead = isNaN(dParsed) ? 0.0 : dParsed;          // explicit isNaN — 0 is a valid deadband
+  if(socket&&socket.readyState===WebSocket.OPEN)
+    socket.send(JSON.stringify({type:'tuning_param', path:'/rexy/'+id, sensitivity:sens, deadband:dead}));
+}
+function pushAllParamTunings(){ for(const p of PARAMS){ if(document.getElementById('sens-'+p)) sendParamTuning(p); } }
+// Velocity-driven axes are drift-prone — bump their default deadband at boot.
+const VEL_PARAMS=['craneYaw','cranePitch','scope','baseX','baseY','baseZ'];
+function applyVelocityDefaults(){
+  for(const p of VEL_PARAMS){
+    const d=document.getElementById('dead-'+p);
+    if(d && parseFloat(d.value)<=0.041) d.value='0.08';     // override only the original 0.04 default
+  }
+}
+// Tracks the active grip mode so doReset() knows whether a grip axis is
+// velocity-driven (drone) or absolute (crane/dolly) when picking reset behaviour.
+let currentGripMode='crane';
+function isVelocityAxis(id){
+  if(['baseX','baseY','baseZ'].includes(id)) return true;             // base XYZ is always velocity
+  if(['craneYaw','cranePitch','scope'].includes(id) && currentGripMode==='drone') return true;
+  return false;
+}
+// Tracked: is the active camera currently parented to a CameraRig_Crane?
+// Drives both the Crane grip-mode button and the Base grid's enabled state.
+let cameraOnCrane = true;                       // assume true until camera_active says otherwise
+function setBaseEnabled(enabled){
+  const g=document.getElementById('base-grid');  if(g) g.classList.toggle('disabled', !enabled);
+  const p=document.getElementById('crane-pos-panel'); if(p) p.classList.toggle('disabled', !enabled);
+}
+function refreshBaseEnabled(){
+  // Base is meaningful only when the grip is driving the crane AND the active camera is on a crane.
+  setBaseEnabled(currentGripMode==='crane' && cameraOnCrane);
+}
+
+// ── Multiple cameras: button row + key/button bind to camera select ─────────
+let cameras=[], activeCamera=null;
+let camBindings={}; try{ camBindings=JSON.parse(localStorage.getItem('rexy_cam_bindings')||'{}'); }catch(e){}
+let camLearn=null;       // {path} while capturing a camera select binding
+
+function camBindDescribe(b){
+  if(!b) return 'Bind';
+  if(b.kind==='key') return '⌨ '+b.code.replace('Key','').replace('Digit','').replace('Arrow','↑↓');
+  if(b.kind==='button') return '🎮 P'+b.pad+'·B'+b.button;
+  return 'Bind';
+}
+function renderCamButtons(){
+  const row=document.getElementById('cam-row'); if(!row) return;
+  if(!cameras.length){
+    row.innerHTML='<span style="color:var(--muted);font-size:.7rem">— none found · expose a property per camera —</span>';
+    return;
+  }
+  row.innerHTML=cameras.map(c=>{
+    const isActive=activeCamera===c.path;
+    const b=camBindings[c.path];
+    const learning=camLearn&&camLearn.path===c.path;
+    const cls=learning?'bindbtn listening':(b?'bindbtn bound':'bindbtn');
+    const txt=learning?'press…':camBindDescribe(b);
+    return `<div class="cam-pill">
+      <button class="cam-btn${isActive?' active':''}" onclick="setCamera('${c.path}')">${c.name}</button>
+      <button class="${cls}" onclick="startBindCamera('${c.path}')" oncontextmenu="clearBindCamera('${c.path}');return false;" title="Bind a key or gamepad button to select this camera">${txt}</button>
+    </div>`;
+  }).join('');
+}
+function startBindCamera(path){ camLearn={path}; learn=null; renderCamButtons(); logMsg('Bind camera select: press a key or gamepad button'); }
+function clearBindCamera(path){ delete camBindings[path]; localStorage.setItem('rexy_cam_bindings',JSON.stringify(camBindings)); renderCamButtons(); }
+function saveCamBindings(){ localStorage.setItem('rexy_cam_bindings',JSON.stringify(camBindings)); }
+
+// ── Functions: bindable one-shot actions (Autolevel etc) ────────────────────
+let functionBindings = {};
+try { functionBindings = JSON.parse(localStorage.getItem('rexy_function_bindings')||'{}'); } catch(e){}
+let functionLearn = null;        // {action} while capturing
+function functionBindDescribe(b){
+  if(!b) return 'Bind';
+  if(b.kind==='key')    return '⌨ '+b.code.replace('Key','').replace('Digit','').replace('Arrow','↑↓');
+  if(b.kind==='button') return '🎮 P'+b.pad+'·B'+b.button;
+  return 'Bind';
+}
+function renderFunctionBindButton(action){
+  const btn=document.getElementById('bind-fn-'+action); if(!btn) return;
+  const b=functionBindings[action], learning=functionLearn && functionLearn.action===action;
+  btn.textContent = learning ? 'press…' : functionBindDescribe(b);
+  btn.classList.toggle('listening', !!learning);
+  btn.classList.toggle('bound',     !!b && !learning);
+}
+function startBindFunction(action){
+  functionLearn = {action};
+  learn = null; camLearn = null;
+  renderFunctionBindButton(action);
+  logMsg('Bind function "'+action+'": press a key or gamepad button');
+}
+function clearBindFunction(action){
+  delete functionBindings[action];
+  localStorage.setItem('rexy_function_bindings', JSON.stringify(functionBindings));
+  renderFunctionBindButton(action);
+  logMsg('Cleared function binding: '+action);
+}
+function captureFunctionInput(inp){
+  if(!functionLearn) return;
+  functionBindings[functionLearn.action] = inp;
+  localStorage.setItem('rexy_function_bindings', JSON.stringify(functionBindings));
+  const a=functionLearn.action; functionLearn=null;
+  renderFunctionBindButton(a);
+  logMsg('Function "'+a+'" bound to '+functionBindDescribe(inp));
+}
+
+// Autolevel — animates roll slider from current to 0.5 (with offset cleared)
+// over `Time` seconds with `F` (feather) easing.
+let autolevelState = null;
+function triggerAutolevel(){
+  if(socket && socket.readyState === WebSocket.OPEN){
+    socket.send(JSON.stringify({type:'clear_offset', path:'/rexy/roll'}));
+  }
+  const speedEl = document.getElementById('auto-speed');
+  const featEl  = document.getElementById('auto-feather');
+  const durationS = parseFloat(speedEl && speedEl.value) || 1.5;
+  const feather   = parseFloat(featEl  && featEl.value)  || 0;
+  const inContinuous = (currentWheelMode === 'continuous');
+  // Continuous mode: slider doesn't track absolute angle, so animate the actual
+  // camera roll value (from the live broadcast) down to 0 via direct property
+  // writes. Absolute mode: animate slider position from current → 0.5 as before.
+  const fromAng = (inContinuous && liveState.camera_rot)
+                  ? (liveState.camera_rot.Roll || 0) : 0;
+  autolevelState = {
+    targetParam: 'roll',
+    inContinuous: inContinuous,
+    fromVal: getParam('roll'),                                  // slider start (absolute mode)
+    fromAng: fromAng,                                            // angle start  (continuous mode)
+    startTime: performance.now(),
+    durationMs: Math.max(50, durationS * 1000),
+    feather: Math.max(0, Math.min(1, feather))
+  };
+  logMsg('Autolevel: roll → 0° over '+durationS.toFixed(1)+'s'
+         + (inContinuous ? ' (continuous, from '+fromAng.toFixed(1)+'°)' : ''));
+}
+function tickAutolevel(){
+  if(!autolevelState) return;
+  const s = autolevelState;
+  const t = Math.min(1, (performance.now() - s.startTime) / s.durationMs);
+  // Blend linear (t) and smoothstep (3t² − 2t³) by the feather amount.
+  const smooth = t * t * (3 - 2 * t);
+  const eased  = t * (1 - s.feather) + smooth * s.feather;
+  if(s.inContinuous){
+    // Continuous wheel mode: write the ACTUAL camera roll angle directly.
+    // GUI slider in continuous mode = velocity, so we don't touch it here.
+    const desired = s.fromAng * (1 - eased);                  // ease toward 0°
+    if(socket && socket.readyState === WebSocket.OPEN){
+      socket.send(JSON.stringify({type:'force_write_value', path:'/rexy/'+s.targetParam, value:desired}));
+    }
+  } else {
+    // Absolute mode: animate slider position. force_write bypasses any intercepts.
+    const next = s.fromVal * (1 - eased) + 0.5 * eased;
+    paramVal[s.targetParam] = next;
+    updateBar(s.targetParam, next);
+    if(socket && socket.readyState === WebSocket.OPEN){
+      socket.send(JSON.stringify({type:'force_write', path:'/rexy/'+s.targetParam, value:next}));
+    }
+  }
+  if(t >= 1){
+    paramRate[s.targetParam]   = 0;
+    paramSmooth[s.targetParam] = 0.5;
+    if(s.inContinuous){
+      // Make sure the velocity slider parks at centre (no residual velocity command)
+      paramVal[s.targetParam] = 0.5;
+      updateBar(s.targetParam, 0.5);
+    }
+    autolevelState = null;
+  }
+}
+const FUNCTION_ACTIONS = { autolevel: triggerAutolevel };
+function fireFunctionAction(action){ const fn = FUNCTION_ACTIONS[action]; if(fn) fn(); }
+function persistAutolevelTuning(){
+  const s=document.getElementById('auto-speed'), f=document.getElementById('auto-feather');
+  if(!s||!f) return;
+  localStorage.setItem('rexy_autolevel', JSON.stringify({
+    speed:parseFloat(s.value)||1.5, feather:parseFloat(f.value)||0.5
+  }));
+}
+// Restore autolevel tuning from localStorage on boot
+try {
+  const a=JSON.parse(localStorage.getItem('rexy_autolevel')||'null');
+  if(a){
+    const s=document.getElementById('auto-speed'), f=document.getElementById('auto-feather');
+    if(s && a.speed!=null)   s.value=a.speed;
+    if(f && a.feather!=null) f.value=a.feather;
+  }
+} catch(e){}
+const GRIP_LABELS={
+  crane:{craneYaw:'Crane Yaw',scope:'Scope',cranePitch:'Crane Pitch'},
+  dolly:{craneYaw:'X · left / right',scope:'Y · fwd / back',cranePitch:'Z · up / down'},
+  drone:{craneYaw:'X · left / right',scope:'Y · fwd / back',cranePitch:'Z · up / down'}
+};
+function relabelGrip(mode){ const s=GRIP_LABELS[mode]; if(!s) return;
+  for(const id in s){ const e=document.getElementById('name-'+id); if(e) e.textContent=s[id]; } }
+function setGripMode(mode){
+  currentGripMode=mode;
+  // Only toggle the grip mode buttons (Crane/Dolly/Drone), NOT the wheel/units modebtns
+  ['crane','dolly','drone'].forEach(m=>{
+    const el=document.getElementById('mode-'+m); if(el) el.classList.toggle('active', m===mode);
+  });
+  relabelGrip(mode);
+  refreshBaseEnabled();                   // base only makes sense when grip drives the crane AND camera is on a crane
+  refreshPosPanelTitles();                // panel title reflects mode (crane/dolly/drone)
+  if(socket&&socket.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:'grip_mode',mode:mode}));
+  // Refresh grip readouts because formatting changes between absolute (cm) and velocity (m/s)
+  ['craneYaw','cranePitch','scope'].forEach(p=>updateBar(p, getParam(p)));
+  logMsg('Grip mode → '+mode);
+}
+
+// ── Multiple cameras — discover + select ─────────────────────────────────────
+function scanCameras(){
+  if(socket&&socket.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:'list_cameras'}));
+}
+function setCamera(path){
+  if(!path||!socket||socket.readyState!==WebSocket.OPEN) return;
+  activeCamera = path;
+  // Swap the bindings slot to this camera's set (creates an empty one on first visit).
+  bindings = loadBindingsForActiveCamera();
+  PARAMS.forEach(bindLabel);                                // refresh every Bind button's label
+  socket.send(JSON.stringify({type:'set_camera',path:path}));
+  // Re-apply the current lens 300ms after the camera switch so the new camera
+  // actually gets a LensSettings write (otherwise it keeps UE's own default).
+  setTimeout(()=>{ if(socket && socket.readyState===WebSocket.OPEN) applyLensSelection(selL.value); }, 300);
+  logMsg('Active camera → '+path.split('.').pop());
+  renderCamButtons();
+}
+function updateCraneAvailability(onCrane){
+  cameraOnCrane = !!onCrane;
+  const btn=document.getElementById('mode-crane'); if(!btn) return;
+  btn.disabled=!onCrane;
+  btn.style.opacity = onCrane ? '1' : '0.4';
+  btn.style.cursor  = onCrane ? 'pointer' : 'not-allowed';
+  btn.title         = onCrane ? '' : 'This camera is not attached to a crane';
+  // Free camera + currently in Crane mode → auto-switch to Dolly
+  if(!onCrane && btn.classList.contains('active')) setGripMode('dolly');
+  refreshBaseEnabled();                            // grey out base when camera isn't on a crane
+}
+function populateCameras(list){
+  cameras = list || [];
+  if(cameras.length && (!activeCamera || !cameras.some(c=>c.path===activeCamera))){
+    activeCamera = cameras[0].path;
+    setCamera(activeCamera);
+  }
+  renderCamButtons();
+}
+
+// ── Input binding ("learn") — bind ANY input (key / gamepad axis / button) to any parameter ──
+const PARAMS=['pan','tilt','roll','craneYaw','cranePitch','scope','baseX','baseY','baseZ','zoom','aperture','focus'];
+const paramVal={}; PARAMS.forEach(p=>paramVal[p]=0.5);
+// Per-camera bindings: allBindings = { '<cameraPath>': { pan:..., tilt:... }, ... }
+// `bindings` always points at the active camera's slot (or '__default__' before any
+// camera is picked). Switching cameras swaps which slot is live.
+let allBindings={}; try{ allBindings=JSON.parse(localStorage.getItem('rexy_bindings_v2')||'{}'); }catch(e){}
+// Migrate the old single-bindings store (rexy_bindings) into the default slot once.
+try{
+  const legacy=localStorage.getItem('rexy_bindings');
+  if(legacy && !allBindings.__default__){ allBindings.__default__=JSON.parse(legacy); }
+}catch(e){}
+function bindingsKey(){ return activeCamera || '__default__'; }
+function loadBindingsForActiveCamera(){
+  const k=bindingsKey();
+  if(!allBindings[k]) allBindings[k]={};
+  return allBindings[k];
+}
+let bindings=loadBindingsForActiveCamera();
+function persistBindings(){
+  allBindings[bindingsKey()] = bindings;
+  localStorage.setItem('rexy_bindings_v2', JSON.stringify(allBindings));
+}
+let learn=null;                       // {param, stage:'first'|'dec', first}
+const keysDown=new Set();
+
+function getParam(p){ return paramVal[p]!=null?paramVal[p]:0.5; }
+function setParam(p,v){
+  v=Math.max(0,Math.min(1,v)); paramVal[p]=v;
+  updateBar(p,v);                                              // updates slider + ro- via formatReadout
+  const s=document.getElementById('slider-'+p); if(s) s.value=v;
+  sendOsc('/rexy/'+p,v);
+}
+function keyName(i){ return i.kind==='key'?i.code.replace('Key','').replace('Arrow','↑↓').replace('Digit',''):('Pad'+i.pad+'·B'+i.button); }
+function bindLabel(p){
+  const el=document.getElementById('bind-'+p); if(!el) return;
+  const b=bindings[p], arming=learn&&learn.param===p;
+  if(arming) el.textContent = learn.stage==='dec' ? 'press DECREASE…' : 'actuate control…';
+  else if(!b) el.textContent='Bind';
+  else if(b.type==='axis') el.textContent='⟲ Pad'+b.pad+'·Ax'+b.axis;
+  else el.textContent='⌨ '+keyName(b.inc)+' / '+keyName(b.dec);
+  el.classList.toggle('listening', !!arming);
+  el.classList.toggle('bound', !!b && !arming);
+}
+function startBind(p){ learn={param:p,stage:'first'}; PARAMS.forEach(bindLabel); logMsg('Bind '+p+': actuate the control…'); }
+function clearBind(p){ delete bindings[p]; persistBindings(); bindLabel(p); logMsg('Cleared binding: '+p); }
+function captureInput(inp){
+  if(!learn) return; const p=learn.param;
+  if(inp.kind==='axis'){
+    // Auto-invert based on direction of first deflection. Convention: the user
+    // presses in the FIRST direction shown in the param's label (e.g. "Y · fwd / back"
+    // → press fwd). Whichever physical stick direction that produces, we map it to
+    // slider-positive. If the deflection sign was negative (typical for "up" on
+    // gamepad Y-axes), store inv:true so raw is negated at runtime.
+    bindings[p] = { type:'axis', pad:inp.pad, axis:inp.axis, inv: inp.sign < 0 };
+    endBind();
+  }
+  else { if(learn.stage==='first'){ learn.first=inp; learn.stage='dec'; bindLabel(p); }
+         else { bindings[p]={type:'keys',inc:learn.first,dec:inp}; endBind(); } }
+}
+function endBind(){ const p=learn.param; persistBindings(); learn=null; bindLabel(p); logMsg('Bound '+p+' (camera: '+(activeCamera?activeCamera.split('.').pop():'default')+')'); }
+
+document.addEventListener('keydown',e=>{
+  if(functionLearn){ captureFunctionInput({kind:'key',code:e.code}); e.preventDefault(); return; }
+  if(camLearn){ camBindings[camLearn.path]={kind:'key',code:e.code}; saveCamBindings(); camLearn=null; renderCamButtons(); logMsg('Camera bound to '+e.code); e.preventDefault(); return; }
+  if(learn){ captureInput({kind:'key',code:e.code}); e.preventDefault(); return; }
+  // Function actions (e.g. Autolevel) — fire on edge.
+  for(const [action,b] of Object.entries(functionBindings)){
+    if(b && b.kind==='key' && b.code===e.code){ fireFunctionAction(action); e.preventDefault(); return; }
+  }
+  for(const [path,b] of Object.entries(camBindings)){
+    if(b && b.kind==='key' && b.code===e.code){ setCamera(path); e.preventDefault(); return; }
+  }
+  keysDown.add(e.code);
+});
+document.addEventListener('keyup',e=>keysDown.delete(e.code));
+
+let gpPrev={};
+// Per-param feather state. paramRate is the smoothed rate-of-change (used for
+// absolute axis and key bindings); paramSmooth is the smoothed slider position
+// (used for velocity-mode axis bindings). Both initialise lazily.
+const paramRate={};
+const paramSmooth={};
+
+// ── Axis null/drift calibration ──────────────────────────────────────────
+// Many gamepad sticks (PS4 in particular) rest at non-zero values like ±0.05
+// rather than 0. We sample the rest values for 5s and subtract them from raw
+// axis readings in the input loop AND in bind capture. Key format: "<pad>.<axis>".
+let axisCalibration = {};
+try { axisCalibration = JSON.parse(localStorage.getItem('rexy_axis_cal')||'{}'); } catch(e){}
+function axisOffset(pad, axis){ return axisCalibration[pad+'.'+axis] || 0; }
+function calibratedAxis(gp, axisIndex){
+  // Apply stored offset, then re-clamp to [-1, 1].
+  const off = axisOffset(gp.index, axisIndex);
+  const v = gp.axes[axisIndex] - off;
+  return v > 1 ? 1 : (v < -1 ? -1 : v);
+}
+let _axisCalSampling = false;
+async function calibrateAxes(){
+  if(_axisCalSampling) return;
+  const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(g=>g) : [];
+  if(!pads.length){
+    document.getElementById('gp-cal-status').textContent = 'No gamepads detected — press a key/click first then plug in';
+    return;
+  }
+  _axisCalSampling = true;
+  const sums = {};           // key -> sum
+  const counts = {};         // key -> sample count
+  const start = performance.now();
+  const DURATION = 5000;     // 5 seconds
+  function sampleTick(){
+    if(performance.now() - start >= DURATION){ finish(); return; }
+    const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(g=>g) : [];
+    for(const gp of pads){
+      gp.axes.forEach((v,i)=>{
+        if(!isFinite(v) || Math.abs(v) > 1.0) return;     // skip broken axes
+        const k = gp.index + '.' + i;
+        sums[k] = (sums[k]||0) + v;
+        counts[k] = (counts[k]||0) + 1;
+      });
+    }
+    const remaining = Math.max(0, Math.ceil((DURATION - (performance.now()-start))/1000));
+    document.getElementById('gp-cal-status').textContent = `Sampling… don't touch the sticks (${remaining}s)`;
+    requestAnimationFrame(sampleTick);
+  }
+  function finish(){
+    for(const k in sums){
+      axisCalibration[k] = sums[k] / counts[k];
+    }
+    localStorage.setItem('rexy_axis_cal', JSON.stringify(axisCalibration));
+    document.getElementById('gp-cal-status').textContent = `Calibrated ${Object.keys(axisCalibration).length} axis offsets — drift nulled`;
+    _axisCalSampling = false;
+    logMsg('Axis calibration captured');
+  }
+  document.getElementById('gp-cal-status').textContent = "Sampling… don't touch the sticks (5s)";
+  requestAnimationFrame(sampleTick);
+}
+function clearAxisCalibration(){
+  axisCalibration = {};
+  localStorage.removeItem('rexy_axis_cal');
+  document.getElementById('gp-cal-status').textContent = 'Calibration cleared — raw axis values now';
+  logMsg('Axis calibration cleared');
+}
+let gpDebugOn=false;
+function toggleGpDebug(){
+  gpDebugOn = !gpDebugOn;
+  document.getElementById('gp-debug').style.display = gpDebugOn ? 'flex' : 'none';
+  document.getElementById('gp-toggle').textContent = gpDebugOn ? 'Hide' : 'Show';
+}
+function renderGpDebug(pads){
+  if(!gpDebugOn) return;
+  const wrap=document.getElementById('gp-debug'); if(!wrap) return;
+  const connected = pads.filter(gp=>gp);
+  if(!connected.length){
+    wrap.innerHTML='<div class="none">No gamepads detected. Press any key or click somewhere first — browsers need a user gesture before the Gamepad API lights up. Then plug in / spin a wheel.</div>';
+    return;
+  }
+  wrap.innerHTML = connected.map(gp=>{
+    const axesHtml = Array.from(gp.axes).map((v,i)=>{
+      const broken = !isFinite(v) || Math.abs(v) > 1.0;
+      if(broken){
+        return `<div class="ax broken">
+          <span class="ai">ax ${i}</span>
+          <div class="abar"><span class="ac"></span></div>
+          <span class="av" title="Out of spec range [-1,+1] — ignored by Bind and runtime">${v.toExponential(2)} ⚠</span>
+        </div>`;
+      }
+      const off = axisOffset(gp.index, i);
+      const corrected = v - off;                             // post-calibration value used by app
+      const pct=((corrected+1)/2)*100;
+      const offLabel = off ? ` (cal -${off.toFixed(3)})` : '';
+      return `<div class="ax">
+        <span class="ai">ax ${i}</span>
+        <div class="abar"><span class="ac"></span><span class="af" style="${corrected>=0?'left:50%;width:'+(pct-50)+'%':'right:50%;left:auto;width:'+(50-pct)+'%'}"></span></div>
+        <span class="av" title="raw ${v.toFixed(3)}${offLabel}">${corrected.toFixed(3)}</span>
+      </div>`;
+    }).join('');
+    const btnsHtml = Array.from(gp.buttons).map((b,i)=>
+      `<span class="bt${b.pressed?' on':''}">${i}${b.pressed?' ●':''}</span>`).join('');
+    return `<div class="gpcard">
+      <h4>Pad ${gp.index} — ${gp.id}</h4>
+      <div class="meta">${gp.axes.length} axes · ${gp.buttons.length} buttons · mapping: ${gp.mapping||'(none)'}</div>
+      <div class="axes">${axesHtml}</div>
+      <div class="btns">${btnsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function inputLoop(){
+  const pads=navigator.getGamepads?Array.from(navigator.getGamepads()):[];
+  // Tick autolevel animation (runs regardless of capture state)
+  tickAutolevel();
+  if(functionLearn){
+    for(const gp of pads){ if(!gp) continue; const pv=gpPrev[gp.index];
+      gp.buttons.forEach((b,i)=>{ const p0=pv?pv.buttons[i]:false;
+        if(b.pressed&&!p0) captureFunctionInput({kind:'button',pad:gp.index,button:i});
+      });
+    }
+  } else if(camLearn){
+    for(const gp of pads){ if(!gp) continue; const pv=gpPrev[gp.index];
+      gp.buttons.forEach((b,i)=>{ const p0=pv?pv.buttons[i]:false;
+        if(b.pressed&&!p0){ camBindings[camLearn.path]={kind:'button',pad:gp.index,button:i}; saveCamBindings(); logMsg('Camera bound to Pad'+gp.index+'·B'+i); camLearn=null; renderCamButtons(); }
+      });
+    }
+  } else if(learn){
+    // Capture an actuated axis. Triggers on EITHER a sudden change (real stick swing)
+    // OR a sustained non-zero value (Rexy Wheel spinning at steady rate — its axis
+    // sits at e.g. +0.4 while you turn it, so frame-to-frame delta ≈ 0).
+    // SKIP axes outside the gamepad spec range [-1, +1] — the current Rexy firmware
+    // is dumping junk like 1.2e9 on axis 9, which would otherwise hijack every Bind.
+    // (Self-heals once the firmware is patched — Rob's snagging list.)
+    for(const gp of pads){ if(!gp) continue; const pv=gpPrev[gp.index];
+      gp.axes.forEach((v,i)=>{
+        if(!isFinite(v) || Math.abs(v) > 1.0) return;            // broken axis — ignore
+        // Drift-corrected values for capture decision (prevents a sticky stick from
+        // being grabbed when user is actually trying to move a different axis).
+        const off = axisOffset(gp.index, i);
+        const corrected = v - off;
+        const p0 = pv ? (pv.axes[i] - off) : 0;
+        const delta = Math.abs(corrected - p0);
+        const absVal = Math.abs(corrected);
+        if(delta > 0.10 || absVal > 0.10){
+          // Pass the sign of the deflection so captureInput can set the binding's
+          // inv flag — user's first-pressed direction becomes slider-positive.
+          captureInput({kind:'axis', pad:gp.index, axis:i, sign: corrected >= 0 ? 1 : -1});
+        }
+      });
+      gp.buttons.forEach((b,i)=>{ const p0=pv?pv.buttons[i]:false; if(b.pressed&&!p0) captureInput({kind:'button',pad:gp.index,button:i}); });
+    }
+  } else {
+    // bound-button camera triggers (edge-detect)
+    for(const [path,b] of Object.entries(camBindings)){
+      if(!b || b.kind!=='button') continue;
+      const gp=pads[b.pad]; if(!gp) continue;
+      const pv=gpPrev[gp.index]; const was = pv ? !!pv.buttons[b.button] : false;
+      const now = !!(gp.buttons[b.button] && gp.buttons[b.button].pressed);
+      if(now && !was) setCamera(path);
+    }
+    // bound-button function triggers (edge-detect) — e.g. Autolevel
+    for(const [action,b] of Object.entries(functionBindings)){
+      if(!b || b.kind!=='button') continue;
+      const gp=pads[b.pad]; if(!gp) continue;
+      const pv=gpPrev[gp.index]; const was = pv ? !!pv.buttons[b.button] : false;
+      const now = !!(gp.buttons[b.button] && gp.buttons[b.button].pressed);
+      if(now && !was) fireFunctionAction(action);
+    }
+    const STEP=0.014;
+    // Axis idle floor. Filters the Rexy Wheels firmware drift (~0.008 sustained
+    // on the inactive wheel) without losing real slow motion (slowest comfortable
+    // wheel turn yields ~0.016). Remove / lower once the wheel firmware is fixed.
+    const STICK_DZ=0.012;
+    // Per-frame baseline accumulation rate for absolute-mode wheels. A full-deflection
+    // wheel (raw=±1) at sensitivity 1.0 traverses 0→1 slider in ~1.5s at 60fps.
+    // Per-param sensitivity multiplies it.
+    const ABS_ACC=0.012;
+    // Gamma response curve on axis input for absolute-mode params. Read per-param
+    // from each card's C field below (default 1.5). 1.0=linear; higher=fluid-head feel
+    // (slow wheel → very slow camera, fast wheel → fast camera). Velocity-mode params
+    // already have a quadratic curve baked into the bridge's _velocity_delta.
+    for(const p of PARAMS){ const b=bindings[p]; if(!b) continue;
+      if(heldParams.has(p)) continue;                  // Hold engaged — bindings ignored for this param
+      if(autolevelState && autolevelState.targetParam===p) continue;  // autolevel is driving this param — don't fight it
+      const fEl=document.getElementById('feat-'+p);
+      const feather = fEl ? Math.max(0, Math.min(0.99, parseFloat(fEl.value)||0)) : 0;
+      const retain  = feather * 0.95;                 // 0 = instant; ~0.94 at feather=1 = very soft ramp
+      if(b.type==='axis'){ const gp=pads[b.pad]; if(gp){
+        let raw=gp.axes[b.axis];
+        if(!isFinite(raw) || Math.abs(raw)>1.0) continue;        // broken axis — leave slider alone
+        raw -= axisOffset(b.pad, b.axis);                        // null drift offset
+        if(b.inv) raw = -raw;                                    // user's first-press direction → slider-positive
+        if(Math.abs(raw)<STICK_DZ) raw=0;
+        // Per-param deadband on RAW input. Crucial for absolute mode: small axis
+        // values would otherwise accumulate into slider drift over time. PS4 sticks
+        // have a residual offset after they're moved (returns to ~0.05 not 0), so
+        // the per-param D filters that. Velocity-mode params get this too — it's
+        // harmless there because bridge-side _velocity_delta also checks deadband.
+        const dEl_p = document.getElementById('dead-'+p);
+        const dead_p = dEl_p ? Math.max(0, parseFloat(dEl_p.value)||0) : 0;
+        if(Math.abs(raw) < dead_p) raw = 0;
+        // Two distinct semantics:
+        //  • VELOCITY mode (continuous wheels, drone grip, base XYZ): slider POSITION
+        //    = axis value, mapped directly. Wheel at rest → slider at centre → camera stops.
+        //    Feather smooths the SLIDER POSITION (eases into and out of motion).
+        //  • ABSOLUTE mode (pan/tilt/roll absolute, grip in crane/dolly): slider
+        //    ACCUMULATES from axis as a rate. Wheel stops (raw=0) = no change = camera holds.
+        //    Feather smooths the RATE (rate ramps up when wheel starts, decays when it stops).
+        const paramIsVelocity = isVelocityAxis(p) ||
+          (['pan','tilt','roll'].includes(p) && currentWheelMode==='continuous');
+        if(paramIsVelocity){
+          const target=(raw+1)/2;
+          if(feather>0){
+            const cur = (paramSmooth[p]==null) ? getParam(p) : paramSmooth[p];
+            paramSmooth[p] = cur*retain + target*(1-retain);
+            if(Math.abs(paramSmooth[p]-getParam(p))>0.0015) setParam(p, paramSmooth[p]);
+          } else {
+            if(Math.abs(target-getParam(p))>0.0015) setParam(p, target);
+          }
+        } else {
+          const sEl=document.getElementById('sens-'+p);
+          const cEl=document.getElementById('curve-'+p);
+          const sens  = sEl ? (parseFloat(sEl.value)||1.0) : 1.0;
+          const curve = cEl ? Math.max(0.5, Math.min(3, parseFloat(cEl.value)||1.5)) : 1.5;
+          // Gamma curve on raw axis: |raw|^C preserving sign. Gives the game-like
+          // fluid head feel — small turns produce much-smaller camera motion than
+          // the linear ratio, big turns still produce fast motion.
+          const shaped = (raw === 0) ? 0 : Math.sign(raw) * Math.pow(Math.abs(raw), curve);
+          const targetRate = shaped * ABS_ACC * sens;
+          paramRate[p] = (paramRate[p]||0)*retain + targetRate*(1-retain);
+          // Apply the rate every frame — no accumulator. With the gamma curve, slow
+          // wheels produce very small but consistent rates which look smoothest when
+          // applied at full 60Hz. The 1e-6 floor skips pure rest and feather-decay tail.
+          if(Math.abs(paramRate[p]) > 1e-6){
+            const next = Math.max(0, Math.min(1, getParam(p) + paramRate[p]));
+            setParam(p, next);
+          }
+        }
+      } }
+      else {
+        // Key / button input — STEP per frame becomes the target rate.
+        // Feather smooths the rate so a key press eases in rather than snapping.
+        let targetRate = 0;
+        if(pressedInput(b.inc,pads)) targetRate += STEP;
+        if(pressedInput(b.dec,pads)) targetRate -= STEP;
+        paramRate[p] = (paramRate[p]||0)*retain + targetRate*(1-retain);
+        if(Math.abs(paramRate[p]) > 1e-6){
+          const next = Math.max(0, Math.min(1, getParam(p) + paramRate[p]));
+          setParam(p, next);
+        }
+      }
+    }
+  }
+  renderGpDebug(pads);           // diagnostic — only renders when panel is shown
+  gpPrev={}; for(const gp of pads){ if(gp) gpPrev[gp.index]={axes:Array.from(gp.axes),buttons:gp.buttons.map(b=>b.pressed)}; }
+  requestAnimationFrame(inputLoop);
+}
+function pressedInput(inp,pads){
+  if(inp.kind==='key') return keysDown.has(inp.code);
+  if(inp.kind==='button'){ const gp=pads[inp.pad]; return !!(gp&&gp.buttons[inp.button]&&gp.buttons[inp.button].pressed); }
+  return false;
+}
+requestAnimationFrame(inputLoop);
+
+// ── Config: save / export / import the whole setup (bindings + connection + gear) ──
+function gv(id){ const e=document.getElementById(id); return e?e.value:undefined; }
+function sv(id,v){ const e=document.getElementById(id); if(e&&v!=null) e.value=v; }
+function gatherConfig(){
+  const paramTunings={};
+  for(const p of PARAMS){
+    const s=document.getElementById('sens-'+p), d=document.getElementById('dead-'+p),
+          f=document.getElementById('feat-'+p), c=document.getElementById('curve-'+p);
+    if(s||d||f||c){
+      const sp=parseFloat(s&&s.value), dp=parseFloat(d&&d.value),
+            fp=parseFloat(f&&f.value), cp=parseFloat(c&&c.value);
+      paramTunings[p]={
+        sensitivity: isNaN(sp) ? 1.0 : sp,
+        curve:       isNaN(cp) ? 1.5 : cp,
+        deadband:    isNaN(dp) ? 0.0 : dp,          // 0 is valid (not "falsy → default")
+        feather:     isNaN(fp) ? 0.0 : fp
+      };
+    }
+  }
+  const paramRanges={};
+  for(const id in PARAM_RANGES){
+    paramRanges[id] = { out_min: PARAM_RANGES[id].out_min, out_max: PARAM_RANGES[id].out_max };
+  }
+  return {
+    rexyBridgeConfig: 1,
+    saved: new Date().toISOString(),
+    connection: { wsHost:gv('cfg-ws-host'), wsPort:gv('cfg-ws-port'),
+                  ueHost:gv('cfg-ue5-host'), uePort:gv('cfg-ue5-port'), base:gv('cfg-base') },
+    lens: selL.value, filmback: selF.value,
+    tuning: { sensitivity: parseFloat(gv('tune-sens'))||1.0,
+              deadband:    parseFloat(gv('tune-dead'))||0.08 },
+    bindings: allBindings,                          // per-camera map: {cameraPath: {param: binding}}
+    camBindings: camBindings,
+    paramTunings: paramTunings,
+    paramRanges: paramRanges,                       // per-param Min/Max overrides (out_min/out_max in native units)
+    customLenses: customLenses,                     // user-defined lens specs
+    units: unitSystem,                              // 'metric' | 'imperial'
+    focusUnits: focusUnits,                         // independent focus unit pref
+    functionBindings: functionBindings,             // bindable actions: autolevel etc
+    autolevel: {
+      speed:   parseFloat((document.getElementById('auto-speed')||{}).value)   || 1.5,
+      feather: parseFloat((document.getElementById('auto-feather')||{}).value) || 0.5
+    },
+    wheelMode: currentWheelMode,                    // 'absolute' | 'continuous'
+    gripMode:  currentGripMode                      // 'crane' | 'dolly' | 'drone'
+  };
+}
+async function exportConfig(){
+  const data=JSON.stringify(gatherConfig(),null,2);
+  if(window.showSaveFilePicker){                       // native "Save As" — choose name + folder
+    try{
+      const h=await window.showSaveFilePicker({
+        suggestedName:'rexy-bridge-config.json',
+        types:[{description:'Rexy Bridge config',accept:{'application/json':['.json']}}]
+      });
+      const w=await h.createWritable(); await w.write(data); await w.close();
+      logMsg('Config saved: '+h.name); return;
+    }catch(e){ if(e&&e.name==='AbortError') return; }   // user cancelled
+  }
+  const blob=new Blob([data],{type:'application/json'});  // fallback: download to Downloads
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='rexy-bridge-config.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  logMsg('Config exported (Downloads)');
+}
+function importConfig(file){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ applyConfig(JSON.parse(r.result)); logMsg('Config imported: '+file.name); }
+                 catch(e){ logMsg('Import failed — not valid config JSON'); } };
+  r.readAsText(file);
+}
+function applyConfig(cfg){
+  if(!cfg||!cfg.rexyBridgeConfig){ logMsg('Import failed — not a Rexy Bridge config'); return; }
+  if(cfg.connection){ const c=cfg.connection;
+    sv('cfg-ws-host',c.wsHost); sv('cfg-ws-port',c.wsPort);
+    sv('cfg-ue5-host',c.ueHost); sv('cfg-ue5-port',c.uePort); sv('cfg-base',c.base); }
+  if(cfg.lens){ selL.value=cfg.lens; }
+  if(cfg.filmback){ selF.value=cfg.filmback; }
+  if(cfg.bindings){
+    // Two shapes — legacy (flat: {param: binding}) and current (per-camera: {camPath: {param: binding}}).
+    const isFlat = Object.values(cfg.bindings).some(v => v && (v.type==='axis' || v.type==='keys'));
+    allBindings = isFlat ? { __default__: cfg.bindings } : cfg.bindings;
+    localStorage.setItem('rexy_bindings_v2', JSON.stringify(allBindings));
+    bindings = loadBindingsForActiveCamera();
+    PARAMS.forEach(bindLabel);
+  }
+  if(cfg.camBindings){ camBindings=cfg.camBindings; localStorage.setItem('rexy_cam_bindings',JSON.stringify(camBindings)); renderCamButtons(); }
+  if(cfg.tuning){ sv('tune-sens', cfg.tuning.sensitivity); sv('tune-dead', cfg.tuning.deadband); }
+  if(cfg.paramTunings){
+    for(const [p,t] of Object.entries(cfg.paramTunings)){
+      sv('sens-'+p, t.sensitivity); sv('dead-'+p, t.deadband);
+      if(t.feather!=null) sv('feat-'+p, t.feather);
+      if(t.curve!=null)   sv('curve-'+p, t.curve);
+    }
+  }
+  if(cfg.paramRanges){
+    for(const [p,r] of Object.entries(cfg.paramRanges)){
+      if(PARAM_RANGES[p]){
+        if(typeof r.out_min === 'number') PARAM_RANGES[p].out_min = r.out_min;
+        if(typeof r.out_max === 'number') PARAM_RANGES[p].out_max = r.out_max;
+      }
+    }
+    persistParamRanges();
+    refreshRangeInputs();
+    PARAMS.forEach(p=>updateBar(p, getParam(p)));
+  }
+  if(Array.isArray(cfg.customLenses)){
+    customLenses = cfg.customLenses;
+    localStorage.setItem('rexy_custom_lenses', JSON.stringify(customLenses));
+    rebuildLensDropdown();
+    if(cfg.lens) selL.value = cfg.lens;            // re-pick after rebuild (in case it was a custom)
+  }
+  if(cfg.units){ setUnits(cfg.units); }
+  if(cfg.focusUnits){ setFocusUnits(cfg.focusUnits); }
+  if(cfg.functionBindings){
+    functionBindings = cfg.functionBindings;
+    localStorage.setItem('rexy_function_bindings', JSON.stringify(functionBindings));
+    Object.keys(FUNCTION_ACTIONS).forEach(renderFunctionBindButton);
+  }
+  if(cfg.autolevel){
+    sv('auto-speed',   cfg.autolevel.speed);
+    sv('auto-feather', cfg.autolevel.feather);
+    persistAutolevelTuning();
+  }
+  if(cfg.wheelMode){ setWheelMode(cfg.wheelMode); }
+  if(cfg.gripMode){  setGripMode(cfg.gripMode);  }
+  if(socket){ socket.onclose=null; socket.close(); }
+  connect();
+  setTimeout(()=>{
+    pushOSCSettings(); sendTuning(); pushAllParamTunings(); pushAllParamRanges();
+    sendPreset('filmback_preset',selF.value);
+    applyLensSelection(selL.value);                 // routes through custom_lens (writes LensSettings)
+  }, 800);
+}
+
+// ── focus cm → ft/in (display helper for later live wiring) ──────────────────
+function cmToFtIn(cm){
+  const inches=cm/2.54, ft=Math.floor(inches/12), inch=Math.round(inches-ft*12);
+  return ft + "' " + inch + '"';
+}
+
+// ── Controls ─────────────────────────────────────────────────────────────────
+// heldParams: when a param is in this set, the input loop ignores its binding
+// (bound wheel / key / button can't move the slider). Slider stays manually
+// draggable — Hold is about decoupling the binding, not freezing the value.
+// Useful for parking one axis (e.g. pan) while operating others.
+const heldParams = new Set();
+function toggleHold(id){
+  if(heldParams.has(id)) heldParams.delete(id); else heldParams.add(id);
+  const btn=document.getElementById('hold-'+id);
+  if(btn) btn.classList.toggle('active', heldParams.has(id));
+  // Also clear any in-flight feather/accumulator state so re-enabling starts clean
+  paramRate[id] = 0; paramSmooth[id] = getParam(id);
+  logMsg('Hold '+id+': '+(heldParams.has(id)?'ON':'OFF'));
+}
+function doReset(id){
+  // Per-axis reset.
+  //  • Velocity axis (base XYZ; or grip in DRONE mode): send slider value 0.5
+  //    — the bridge's osc_send intercept sets its _drone_state / _base_state
+  //    for that axis to 0.5, halting the velocity tick for that axis.
+  //  • Absolute axis (pan/tilt/roll/zoom/aperture/focus; grip in crane/dolly):
+  //    CLEAR the calibrated offset on the bridge first, THEN send slider=0.5.
+  //    Bridge writes (0.5-0.5)*sens*range + 0 = 0 to UE, so the camera lands
+  //    on absolute 0. Slider centred, LIVE matches Commanded. Replaces the
+  //    old "calibrate" call which silently snapped the camera back to the
+  //    stale offset before reading.
+  paramRate[id]   = 0;
+  paramSmooth[id] = 0.5;
+  if(isVelocityAxis(id)){
+    setParam(id, 0.5);                                          // halts velocity
+    logMsg('Halt '+id);
+  } else {
+    if(socket&&socket.readyState===WebSocket.OPEN)
+      socket.send(JSON.stringify({type:'clear_offset', path:'/rexy/'+id}));
+    setParam(id, 0.5);                                          // writes absolute 0 to UE
+    logMsg('Reset '+id+' to 0');
+  }
+}
+// ── Custom lenses (user-defined, separate from UE's built-in presets) ───────
+let customLenses=[]; try{ customLenses=JSON.parse(localStorage.getItem('rexy_custom_lenses')||'[]'); }catch(e){}
+function toggleCustomLens(){
+  const el=document.getElementById('custom-lens-form');
+  if(!el) return;
+  el.style.display = (el.style.display==='none') ? 'flex' : 'none';
+}
+function saveCustomLens(){
+  const name = document.getElementById('cl-name').value.trim();
+  if(!name){ logMsg('Custom lens needs a name'); return; }
+  const lens = {
+    name,
+    custom: true,
+    min_focal:    parseFloat(document.getElementById('cl-fmin').value)  || 50,
+    max_focal:    parseFloat(document.getElementById('cl-fmax').value)  || 50,
+    min_aperture: parseFloat(document.getElementById('cl-amin').value)  || 1.8,
+    max_aperture: parseFloat(document.getElementById('cl-amax').value)  || 22,
+    min_focus:    parseFloat(document.getElementById('cl-focus').value) || 50,
+  };
+  // Replace if a custom lens with the same name already exists, else append.
+  customLenses = customLenses.filter(l=>l.name!==name);
+  customLenses.push(lens);
+  localStorage.setItem('rexy_custom_lenses', JSON.stringify(customLenses));
+  rebuildLensDropdown();
+  selL.value = name;
+  selL.onchange();                                         // apply immediately
+  toggleCustomLens();
+  logMsg('Custom lens saved: '+name);
+}
+function rebuildLensDropdown(){
+  if(!selL) return;
+  const current = selL.value;
+  selL.innerHTML='';
+  // Built-in presets first (UE knows about these)
+  LENSES.forEach(n=>{ const o=new Option(n,n); selL.add(o); });
+  // Then custom lenses, tagged
+  if(customLenses.length){
+    const sep=new Option('— custom —','',true,false); sep.disabled=true; selL.add(sep);
+    customLenses.forEach(l=>selL.add(new Option(l.name, l.name)));
+  }
+  // Try to restore previous selection
+  if([...selL.options].some(o=>o.value===current)) selL.value=current;
+}
+function applyLensSelection(name){
+  // Look up specs: prefer user customs (they can override a built-in name); fall back to built-ins.
+  const cl = customLenses.find(l=>l.name===name) || LENSES_DATA[name];
+  if(!cl){ logMsg('Unknown lens: '+name); return; }
+  const LENS_INFINITY_CM = 100000;       // 1km — effectively infinity for any cinema use
+  const max_focus = cl.max_focus || LENS_INFINITY_CM;
+  // Always go through apply_custom_lens on the bridge (writes LensSettings directly).
+  // SetLensPresetByName doesn't recognise our names so it leaves the camera unchanged.
+  if(socket&&socket.readyState===WebSocket.OPEN){
+    socket.send(JSON.stringify({type:'custom_lens',
+      name, min_focal:cl.min_focal, max_focal:cl.max_focal,
+      min_aperture:cl.min_aperture, max_aperture:cl.max_aperture,
+      min_focus:cl.min_focus, max_focus}));
+  }
+  // Mirror on GUI side: update PARAM_RANGES, refresh Min/Max inputs, re-render readouts.
+  PARAM_RANGES.zoom.out_min     = cl.min_focal;     PARAM_RANGES.zoom.out_max     = cl.max_focal;
+  PARAM_RANGES.aperture.out_min = cl.min_aperture;  PARAM_RANGES.aperture.out_max = cl.max_aperture;
+  PARAM_RANGES.focus.out_min    = cl.min_focus;     PARAM_RANGES.focus.out_max    = max_focus;
+  refreshRangeInputs();
+  ['zoom','aperture','focus'].forEach(p=>updateBar(p, getParam(p)));
+  // Lock zoom slider on primes (no focal length range)
+  setZoomLocked(cl.min_focal === cl.max_focal);
+  logMsg('Lens → '+name+' ('+cl.min_focal+(cl.min_focal===cl.max_focal?'mm prime':'-'+cl.max_focal+'mm zoom')+', f/'+cl.min_aperture+'-'+cl.max_aperture+')');
+}
+
+function setZoomLocked(locked){
+  const s=document.getElementById('slider-zoom'); if(!s) return;
+  s.disabled = locked;
+  s.style.opacity = locked ? '0.35' : '';
+  s.style.cursor  = locked ? 'not-allowed' : '';
+  s.title         = locked ? 'Zoom locked — prime lens has fixed focal length' : '';
+}
+
+// ── Status ───────────────────────────────────────────────────────────────────
+function setWS(on){ document.getElementById('ws-dot').className='dot '+(on?'on':'warn');
+  document.getElementById('ws-status').textContent=on?'WS CONNECTED':'WS OFFLINE'; }
+function setHID(on,label){ document.getElementById('hid-dot').className='dot '+(on?'live':'');
+  document.getElementById('hid-status').textContent=label||(on?'HARDWARE LIVE':'HARDWARE OFFLINE'); }
+function setRC(on){ document.getElementById('rc-dot').className='dot '+(on?'on':'');
+  document.getElementById('rc-status').textContent=on?'UE RC CONNECTED':'UE RC'; }
+
+// ── WebSocket (same protocol as the current app / rexy_osc.py) ───────────────
+function connect(){
+  clearTimeout(retryTimer);
+  const host=document.getElementById('cfg-ws-host').value.trim()||'127.0.0.1';
+  const port=document.getElementById('cfg-ws-port').value.trim()||'9000';
+  try{
+    socket=new WebSocket('ws://'+host+':'+port);
+    socket.onopen=()=>{
+      setWS(true); setHID(true,'SCRIPT RUNNING');
+      pushOSCSettings(); sendTuning(); pushAllParamTunings(); pushAllParamRanges();
+      // Push current GUI modes so the bridge matches what's on screen — otherwise
+      // a Continuous-mode session won't actually engage the bridge tick if user
+      // picked Continuous before WS came up, or after a bridge restart.
+      socket.send(JSON.stringify({type:'wheel_mode', mode:currentWheelMode}));
+      socket.send(JSON.stringify({type:'grip_mode',  mode:currentGripMode}));
+      setTimeout(scanCameras,1500);
+    };
+    socket.onmessage=(e)=>{ try{ handleMessage(JSON.parse(e.data)); }catch(err){} };
+    socket.onclose=()=>{ setWS(false); setHID(false); setRC(false); retryTimer=setTimeout(connect,3000); };
+    socket.onerror=()=>{};
+  }catch(e){ setWS(false); retryTimer=setTimeout(connect,3000); }
+}
+function handleMessage(data){
+  if(data.type==='device_connected'){ setHID(true,(data.device_name||'DEVICE').toUpperCase()); logMsg('Device: '+(data.device_name||'')); }
+  else if(data.type==='device_disconnected'){ setHID(false,'NO DEVICE'); }
+  else if(data.type==='rc_status'){ setRC(!!data.connected); }
+  else if(data.type==='cameras'){ populateCameras(data.cameras); }
+  else if(data.type==='camera_active'){ updateCraneAvailability(!!data.on_crane); }
+  else if(data.type==='state'&&data.controls){
+    for(const id of ['pan','tilt','roll']){ const c=data.controls[id];
+      if(c&&c.value!==undefined) updateBar(id,c.value); }
+    if(data.osc){ if(data.osc.host)document.getElementById('cfg-ue5-host').value=data.osc.host;
+      if(data.osc.port)document.getElementById('cfg-ue5-port').value=data.osc.port;
+      if(data.osc.base_path)document.getElementById('cfg-base').value=data.osc.base_path; }
+  }
+  else if(data.type==='osc'&&data.wheel){ updateBar(data.wheel,data.value); logEntry(data.path,data.value); }
+  else if(data.type==='locations'){
+    updateLocations(data);                           // position panels
+    if(data.camera)     liveState.camera     = data.camera;
+    if(data.camera_rot) liveState.camera_rot = data.camera_rot;
+    if(data.crane)      liveState.crane      = data.crane;
+    refreshAllLive();                                // per-card LIVE rows
+  }
+}
+
+// ── Position readout + manual override + zero (drone target = camera; base target = crane) ──
+const POS_TARGETS=[
+  {key:'camera', mountId:'cam-pos-panel'},
+  {key:'crane',  mountId:'crane-pos-panel'}
+];
+// Panel title reflects what the camera is doing in the current grip mode.
+function posPanelTitle(key){
+  if(key==='crane') return 'Crane base (rig)';
+  // key==='camera' — title follows the active grip mode
+  if(currentGripMode==='drone') return 'Drone target (camera)';
+  if(currentGripMode==='dolly') return 'Dolly target (camera)';
+  return 'Crane target (camera)';                  // crane mode
+}
+const lastPos={};                // {target: {X,Y,Z}}  — most recent live reading
+const posEditing={};             // {target+axis: true} — don't clobber an input the user is typing in
+
+function renderPosPanels(){
+  for(const t of POS_TARGETS){
+    const mount=document.getElementById(t.mountId); if(!mount) return;
+    mount.innerHTML=`<span class="ptitle" id="ptitle-${t.key}">${posPanelTitle(t.key)}</span>
+      ${['X','Y','Z'].map(a=>`
+        <span class="pcoord"><label>${a}</label>
+          <span class="pval" id="pv-${t.key}-${a}">—</span>
+          <input id="pi-${t.key}-${a}" type="number" step="1" placeholder="set"
+                 onfocus="posEditing['${t.key}${a}']=true"
+                 onblur="posEditing['${t.key}${a}']=false">
+        </span>`).join('')}
+      <button class="pbtn" onclick="sendSetLocation('${t.key}')">Set</button>
+      <button class="pbtn zero" onclick="sendZeroLocation('${t.key}')">Zero</button>`;
+  }
+}
+function refreshPosPanelTitles(){
+  for(const t of POS_TARGETS){
+    const el=document.getElementById('ptitle-'+t.key);
+    if(el) el.textContent=posPanelTitle(t.key);
+  }
+}
+function updateLocations(data){
+  for(const t of POS_TARGETS){
+    const p=data[t.key]; if(!p) continue;
+    lastPos[t.key]=p;
+    for(const a of ['X','Y','Z']){
+      const ro=document.getElementById('pv-'+t.key+'-'+a);
+      if(ro) ro.textContent=(p[a]||0).toFixed(1);
+    }
+  }
+}
+function readSetInputs(target){
+  // For any axis the user left blank, fall back to the last known live reading
+  const last=lastPos[target]||{X:0,Y:0,Z:0};
+  const out={};
+  for(const a of ['X','Y','Z']){
+    const el=document.getElementById('pi-'+target+'-'+a);
+    const v=el&&el.value!==''?parseFloat(el.value):last[a];
+    out[a]=isNaN(v)?last[a]:v;
+  }
+  return out;
+}
+function sendSetLocation(target){
+  if(!socket||socket.readyState!==WebSocket.OPEN) return;
+  const p=readSetInputs(target);
+  socket.send(JSON.stringify({type:'set_location',target:target,x:p.X,y:p.Y,z:p.Z}));
+  // clear the input fields so they don't keep stale overrides
+  for(const a of ['X','Y','Z']){ const el=document.getElementById('pi-'+target+'-'+a); if(el) el.value=''; }
+  logMsg('Set '+target+' → X='+p.X.toFixed(1)+' Y='+p.Y.toFixed(1)+' Z='+p.Z.toFixed(1));
+}
+function sendZeroLocation(target){
+  if(!socket||socket.readyState!==WebSocket.OPEN) return;
+  socket.send(JSON.stringify({type:'set_location',target:target,x:0,y:0,z:0}));
+  for(const a of ['X','Y','Z']){ const el=document.getElementById('pi-'+target+'-'+a); if(el) el.value=''; }
+  logMsg('Zeroed '+target+' position');
+}
+function sendControl(wheel,param,value){
+  if(socket&&socket.readyState===WebSocket.OPEN) socket.send(JSON.stringify({wheel,param,value}));
+}
+function pushOSCSettings(){
+  sendControl('osc','host',document.getElementById('cfg-ue5-host').value.trim());
+  sendControl('osc','port',+document.getElementById('cfg-ue5-port').value);
+  sendControl('osc','base_path',document.getElementById('cfg-base').value.trim());
+}
+
+// ── Log ──────────────────────────────────────────────────────────────────────
+let logThrottle=0;
+function logEntry(path,value){ if(++logThrottle%5!==0)return;
+  const c=document.getElementById('log'); const d=document.createElement('div'); d.className='log-entry';
+  d.innerHTML='<span class="p">'+path+'</span><span class="v">'+value.toFixed(4)+'</span>';
+  c.insertBefore(d,c.firstChild); while(c.children.length>80)c.removeChild(c.lastChild);
+}
+function logMsg(m){ const c=document.getElementById('log'); const d=document.createElement('div');
+  d.className='log-entry'; d.style.color='var(--faint)'; d.textContent=m;
+  c.insertBefore(d,c.firstChild); while(c.children.length>80)c.removeChild(c.lastChild); }
+
+['cfg-ws-host','cfg-ws-port'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{
+  if(socket){socket.onclose=null;socket.close();} connect(); }));
+['cfg-ue5-host','cfg-ue5-port','cfg-base'].forEach(id=>document.getElementById(id).addEventListener('change',pushOSCSettings));
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+setUnits(unitSystem);                              // sets active class on units buttons + re-renders
+setFocusUnits(focusUnits);                         // and the focus-only toggle
+renderFunctionBindButton('autolevel');             // function bind buttons reflect their stored binding
+['pan','tilt','roll'].forEach(id=>updateBar(id,0.5));
+PARAMS.forEach(bindLabel);
+renderPosPanels();
+// (applyVelocityDefaults no longer called — Rob wants D=0 for everything by default;
+//  the function is left defined in case a "safe stick drift" preset is needed later.)
+rebuildLensDropdown();                              // merge any persisted custom lenses into the dropdown
+// Seed each card's Min/Max labels + inputs, then refresh readouts
+refreshRangeLabels();
+refreshRangeInputs();
+PARAMS.forEach(p=>updateBar(p, getParam(p)));       // re-render in case overrides loaded
+connect();
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-workspace
+*.sublime-project
+
+# User-specific (never commit these)
+# The user's actual mappings.json contains paths from their UE5 project.
+# Ship mappings.json.example instead; user copies it locally.
+bridge/mappings.json
+
+# Saved configs from the app's Export button
+rexy-bridge-config*.json
+
+# Logs / scratch
+*.log
+scratch/
+.tmp/
