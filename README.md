@@ -33,7 +33,7 @@ Virtual production camera control for Unreal Engine 5. Drive Cine Camera Actors 
 
 ## Requirements
 
-- **Python 3.10+**
+- **Python 3.9+**
 - **Unreal Engine 5.3+** with the Remote Control plugin enabled
 - A modern browser — Chrome / Edge / Firefox recommended (Safari Gamepad API support is partial)
 
@@ -41,7 +41,15 @@ Virtual production camera control for Unreal Engine 5. Drive Cine Camera Actors 
 
 ### 1. Install Python dependencies
 
+**Windows:**
+```powershell
+pip install -r requirements.txt
+```
+
+**Mac / Linux** (macOS Homebrew Python is externally managed — use a virtual environment):
 ```bash
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -59,7 +67,9 @@ See [`docs/ue5-setup.md`](docs/ue5-setup.md) for step-by-step instructions cover
 cp mappings.json.example bridge/mappings.json
 ```
 
-Edit `bridge/mappings.json` and replace the `<YOUR_PROJECT>` / `<YOUR_LEVEL>` / `<YOUR_CAMERA>` placeholders with the actual paths from your UE5 project. The UE5 setup guide walks you through finding these.
+Edit `bridge/mappings.json` and replace the `<YOUR_LEVEL>` / `<YOUR_CAMERA>` / `<YOUR_CRANE>` placeholders with the actual paths from your UE5 project. The UE5 setup guide walks you through finding these.
+
+> **Note:** `mappings.json` must live in the `bridge/` subfolder, not the repo root.
 
 ### 4. Run the bridge
 
@@ -69,17 +79,23 @@ cd bridge
 python rexy_osc.py --verbose
 ```
 
-**Mac / Linux:**
+**Mac / Linux (with venv):**
 ```bash
-cd bridge
-python3 rexy_osc.py --verbose
+./venv/bin/python3 bridge/rexy_osc.py --verbose
+```
+
+Or if your venv is active:
+```bash
+python3 bridge/rexy_osc.py --verbose
 ```
 
 ### 5. Open the app
 
-Open `app/index.html` in your browser. It auto-connects to the bridge at `ws://127.0.0.1:9000`. When everything is up you'll see three green indicators in the top right:
+Open `app/index.html` in your browser. It auto-connects to the bridge at `ws://127.0.0.1:9000`. When everything is up you'll see three indicators in the top right:
 
-![App header](docs/screenshots/app-header.png)
+- **SCRIPT RUNNING** — pink/active
+- **WS CONNECTED** — green
+- **UE RC** — green (may take a moment to update; if grey but camera sliders move UE, the connection is working)
 
 ### 6. Bind your hardware
 
@@ -87,7 +103,7 @@ Open `app/index.html` in your browser. It auto-connects to the bridge at `ws://1
 - For axis bindings (wheels/sticks), push in the direction you want to be "positive" *first* — the binding auto-inverts to match.
 - For keyboard, press the increase key, then the decrease key.
 
-![A bound roll card](docs/screenshots/wheel-card-bound.png)
+> **Controller not showing up?** Click anywhere on the page first, then **press a physical button** on your device. The browser Gamepad API requires both a user gesture (click) and a button press before it detects controllers — moving axes alone is not enough.
 
 ## How it works
 
@@ -109,13 +125,9 @@ OSC is the stable contract layer. Today inputs come from the browser; tomorrow t
 
 Pan / tilt / roll with the per-axis tuning row visible. Each card has its own S/C/D/F values, Min/Max range, and Bind / Hold / Reset buttons. The mode selector top-right switches between **Absolute** (slider = exact rotation) and **Continuous** (slider = rotation rate, infinite range).
 
-![Rexy Wheels and Functions](docs/screenshots/wheels-functions.png)
-
 ### Focus, lens & body — Rexy Focus
 
 Filmback selector, lens preset / custom lens, and the three continuous controls (zoom mm, aperture f/, focus). Focus is log-scaled across 30 cm to ∞. The top-right **Focus units** toggle lets you keep focus in ft/in even when everything else is metric — useful for focus pullers.
-
-![Rexy Focus section](docs/screenshots/focus-section.png)
 
 ### Grip modes — Rexy Grip
 
@@ -123,15 +135,9 @@ Three modes, switched at runtime:
 
 **Crane** — drive the CameraRig_Crane's yaw, pitch, and arm length. Base X/Y/Z controls below give world-space positioning of the rig.
 
-![Rexy Grip in Crane mode](docs/screenshots/grip-crane-full.png)
-
 **Dolly** — drive the camera's local X/Y/Z position directly. The crane is parked. Distances in cm (or ft if imperial).
 
-![Rexy Grip in Dolly mode](docs/screenshots/grip-dolly-mode.png)
-
 **Drone** — camera-local *velocity* control (X = sideways, Y = forward/back, Z = up/down). Slider centre = stationary; deflection = direction and speed. Readouts in m/s (or ft/s).
-
-![Rexy Grip in Drone mode](docs/screenshots/grip-drone-mode.png)
 
 ### Per-card tuning
 
@@ -146,67 +152,62 @@ Three modes, switched at runtime:
 
 Bindable one-shot actions, below the wheels. Currently:
 
-- **Autolevel Roll** — smoothly returns the camera roll to 0° over `Time` seconds with `F` easing. Works in both absolute and continuous modes; in continuous mode it reads the camera's actual roll from UE and animates the absolute angle.
+- **Autolevel Roll** — smoothly returns the camera roll to 0° over `Time` seconds with `F` easing.
 
 ### Per-axis buttons
 
 | Button | Behaviour |
 |---|---|
 | **Bind** | Click then actuate any input (key / stick / button) to bind. Right-click to clear. |
-| **Hold** | Wheel cards only. Freezes the binding for that axis until pressed again. Slider is still draggable. |
-| **Reset** | Velocity axes: halts the velocity. Absolute axes: clears the calibrated offset and snaps the slider to centre, sending the camera to absolute 0. |
-
-### Min / Max per param
-
-Each card has Min/Max inputs that override the default range. Honour the units toggle:
-- Angles: degrees
-- Distances: cm or ft (depending on units toggle; focus has its own toggle)
-- Focal length: mm
-- Aperture: f-stop
-
-Changing Min/Max sends the new range to the bridge live.
+| **Hold** | Wheel cards only. Freezes the binding for that axis until pressed again. |
+| **Reset** | Velocity axes: halts the velocity. Absolute axes: clears the calibrated offset, snaps slider to centre. |
 
 ## Troubleshooting
 
 ### Bridge can't connect to UE5
 
-- Confirm the **Remote Control** plugin is enabled (Project Settings → Plugins).
+- Confirm the **Remote Control** plugin is enabled (Edit → Plugins).
 - Confirm the WebSocket server is enabled (Project Settings → Plugins → Remote Control → WebSocket Server).
 - Verify the port (default 30020) matches `ws_port` in `mappings.json`.
-- Make sure UE5 is actually running with your project loaded.
+- Make sure UE5 is running with your project loaded (the bridge connects to the editor, not a running game).
 
 ### Hardware isn't detected by the browser
 
 - Click anywhere on the page first — browsers require a user gesture before exposing gamepads.
-- Open the **Gamepad Debug** panel at the bottom of the page. If your device doesn't appear there, it's a driver/HID issue not a Rexy Bridge issue.
-- Some gamepads only appear after they've been "seen" by another app first (e.g., Steam).
+- Then **press a physical button** on your device. Moving axes alone (wheels, sticks) is not enough to trigger browser gamepad detection — a button press is required.
+- Open the **Gamepad Debug** panel at the bottom of the page to confirm what the browser sees.
+- Some gamepads only appear after they've been "seen" by another app first (e.g., Steam, or a utility like Controllers Lite on Mac).
 
-![Gamepad debug panel](docs/screenshots/gamepad-debug.png)
+### UE RC indicator stays grey
 
-The debug panel above shows three devices simultaneously — a vJoy virtual driver, a PS4 controller (with calibrated drift offsets), and a Rexy Wheels Device (axis 9 flagged red as out-of-spec; it's ignored at runtime, pending a firmware fix).
+- This is sometimes a display timing issue — drag a camera slider and check whether the camera actually moves in UE. If it does, the connection is live and the indicator will catch up.
+- If the camera doesn't move, check the Remote Control WebSocket is running (Project Settings → Plugins → Remote Control).
+
+### Camera not found when clicking Rescan
+
+- Make sure you placed a **Cine Camera Actor**, not a plain Camera Actor. Only CineCameraActors are found by Rescan.
+- Make sure at least one property on the CineCameraActor is exposed to the `RexyControl` preset. Any property works — just one is enough.
 
 ### Stick drift causing constant slow camera motion
 
 - Open **Gamepad Debug → Null Drift (5s)**. Don't touch the sticks for 5 seconds.
 - After calibration, rest-position offsets are subtracted from raw axis values.
-- PS4 sticks have a *residual* offset after being moved (they don't return cleanly to zero). For those, bump the per-param **D** to 0.05–0.08 on the affected param.
+- PS4 sticks have a *residual* offset after being moved. For those, bump the per-param **D** to 0.05–0.08 on the affected param.
 
 ### Camera goes invisible while moving the crane
 
-- Make sure your `mappings.json` has `"access": "WRITE_TRANSACTION_ACCESS"` and `"write_throttle_ms": 100` on the crane params (craneYaw / cranePitch / scope). The example file already has this.
-- If problems persist, try lower throttling: `"write_throttle_ms": 200`.
+- Make sure your `mappings.json` has `"access": "WRITE_TRANSACTION_ACCESS"` and `"write_throttle_ms": 100` on the crane params. The example file already has this.
 
 ### "Auto pan/tilt OFF" message at startup
 
-- This is correct. The legacy hard-coded pan/tilt path is OFF by default. Bind your wheels via the app's Bind UI — multiple devices supported, per-camera bindings.
-- Pass `--auto-pan-tilt` to re-enable the legacy behaviour for a quick test.
+- This is correct. Bind your wheels via the app's Bind UI instead.
+- Pass `--auto-pan-tilt` to re-enable the legacy hard-coded axis behaviour for a quick test.
 
 ## Known limitations
 
-- **Per-camera lens settings** don't currently persist when switching cameras — re-select the lens from the dropdown after switching.
-- **Min/Max in dolly mode** still shows crane-mode defaults in the inputs even though the operating range is ±500 cm. Display only; bridge writes correctly.
-- **Rexy Wheels firmware** has a phantom value on axis 9 (~1.2e9). Filtered in software — will be fixed in firmware.
+- **Per-camera lens settings** don't currently persist when switching cameras.
 - **Safari** Gamepad API has partial support; Chrome/Firefox/Edge are recommended.
+- **Rexy Wheels firmware** has a phantom value on axis 9 (~1.2e9). Filtered in software.
 
 ## Credits
 
