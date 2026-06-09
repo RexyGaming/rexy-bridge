@@ -45,6 +45,61 @@
   .lbl-focus::before{background:var(--gold)}
   .lbl-grip::before{background:var(--blue)}
   .lbl-functions::before{background:#c084fc}                /* purple-ish — functions */
+  .lbl-moco::before{background:#22d3ee}                     /* cyan — virtual moco */
+
+  /* ── Virtual MoCo section ───────────────────────────────────────────────── */
+  .moco-panel{margin-top:0;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+  .moco-transport{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .moco-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:6px;cursor:pointer;transition:.12s}
+  .moco-btn:hover{color:var(--text);border-color:var(--blue-deep)}
+  .moco-btn:disabled{opacity:.35;cursor:not-allowed}
+  .moco-btn.rec{border-color:#c43c2e;color:#ff7a6a}
+  .moco-btn.rec.active,.moco-btn.rec:hover:not(:disabled){background:rgba(196,60,46,.22);color:#fff;border-color:#ff5a48}
+  .moco-btn.rec.active{animation:moco-rec-pulse 1s infinite}
+  @keyframes moco-rec-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,90,72,.7)}50%{box-shadow:0 0 0 6px rgba(255,90,72,0)}}
+  .moco-btn.play{border-color:#22c55e;color:#86efac}
+  .moco-btn.play.active,.moco-btn.play:hover:not(:disabled){background:rgba(34,197,94,.22);color:#fff;border-color:#22c55e}
+  .moco-btn.stop:hover:not(:disabled){background:rgba(255,255,255,.06);color:var(--text)}
+  .moco-btn.small{font-size:.55rem;padding:5px 8px;letter-spacing:.08em}
+  .moco-btn.moco-reset{color:#ff8888;border-color:#5a2828}
+  .moco-btn.moco-reset:hover{background:rgba(255,90,90,.15);color:#ff5a48}
+  .moco-status{font-size:.62rem;color:var(--faint);font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+  .moco-take-select{background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'Inter';font-size:.66rem;padding:3px 8px;border-radius:5px;outline:none;cursor:pointer;min-width:140px;max-width:260px}
+  .moco-take-select:focus{border-color:var(--blue)}
+  .moco-tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:4px 14px}
+  .moco-no-tracks{grid-column:1/-1;color:var(--faint);font-size:.65rem;font-style:italic;padding:4px 0}
+  .moco-track{display:flex;align-items:center;gap:8px;font-size:.7rem;background:#0d1219;border-radius:5px;padding:4px 10px}
+  .moco-track input[type=checkbox]{accent-color:#22d3ee;width:13px;height:13px;cursor:pointer}
+  .moco-track .mt-arm{display:flex;gap:3px}
+  .moco-track .mt-arm button{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.6rem;font-weight:600;letter-spacing:.04em;width:22px;height:20px;border-radius:4px;cursor:pointer;padding:0;line-height:1}
+  .moco-track .mt-arm button:hover{color:var(--text);border-color:var(--blue-deep)}
+  .moco-track .mt-arm .arm-p.on{background:rgba(34,197,94,.22);border-color:#22c55e;color:#86efac}
+  .moco-track .mt-arm .arm-r.on{background:rgba(196,60,46,.22);border-color:#ff5a48;color:#ff7a6a}
+  .moco-track .mt-arm .arm-e.on{background:rgba(125,211,252,.22);border-color:#7dd3fc;color:#bae6fd}
+  .moco-track .mt-arm .arm-e:disabled{opacity:.35;cursor:not-allowed}
+  .moco-track .mt-name{flex:1;color:var(--text);letter-spacing:.02em}
+  .moco-track .mt-meta{color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:.58rem}
+  .moco-track.has-data .mt-meta{color:var(--blue)}
+  .moco-track.recording{background:rgba(196,60,46,.10)}
+  .moco-track.playing{background:rgba(34,197,94,.10)}
+  .moco-track .mt-dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;cursor:pointer;border:1px solid rgba(0,0,0,.25)}
+  .moco-track .mt-dot:hover{transform:scale(1.2);box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+  .moco-colour-popup{position:fixed;background:#0d1219;border:1px solid var(--border);border-radius:6px;padding:6px;display:grid;grid-template-columns:repeat(8,1fr);gap:3px;z-index:1000;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+  .moco-swatch{width:18px;height:18px;border:1px solid rgba(255,255,255,.12);border-radius:3px;cursor:pointer;padding:0;transition:transform .08s}
+  .moco-swatch:hover{transform:scale(1.18);border-color:#fff}
+  .moco-swatch-reset{grid-column:1/-1;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.55rem;letter-spacing:.06em;padding:5px;margin-top:4px;cursor:pointer;border-radius:4px;text-transform:uppercase}
+  .moco-swatch-reset:hover{color:var(--text);background:rgba(255,255,255,.05);border-color:var(--blue-deep)}
+  .moco-timeline{background:#0a0e15;border:1px solid var(--border-soft);border-radius:6px;padding:2px;position:relative}
+  .moco-timeline canvas{display:block;width:100%;height:180px;cursor:ew-resize}
+  .moco-timeline canvas.grab{cursor:grab}
+  .moco-timeline canvas.grabbing{cursor:grabbing}
+  .moco-zoom-row{display:flex;align-items:center;gap:8px;padding:6px 0 0 0}
+  .moco-zoom-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--faint);min-width:80px}
+  .moco-scroll{position:relative;flex:1;height:12px;background:#0d1219;border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer}
+  .moco-scroll-thumb{position:absolute;top:0;left:0;height:100%;background:var(--blue);opacity:.55;border-radius:6px;min-width:14px}
+  .moco-scroll-thumb:hover{opacity:.75}
+  .moco-hover{position:fixed;display:none;background:#0d1219;border:1px solid var(--border);border-radius:5px;padding:6px 9px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text);line-height:1.5;pointer-events:none;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.4);max-width:240px}
+  .moco-hover b{color:var(--blue);font-weight:600}
   .func-panel{margin-top:0;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;gap:6px}
   .func-card{display:flex;align-items:center;gap:10px;font-size:.7rem;flex-wrap:wrap}
   .func-card .func-name{flex:0 0 auto;color:var(--text);font-weight:500;min-width:140px;font-size:.78rem}
@@ -228,6 +283,30 @@
       <span class="tlabel">F</span>
       <input id="auto-feather" type="number" step="0.05" min="0"   max="0.95" value="0.5" onchange="persistAutolevelTuning()" title="Easing curve. 0=linear ramp; higher=smoothstep ease in/out">
     </div>
+    <div class="func-card" id="fc-moco-rec">
+      <span class="func-name">MoCo · Rec</span>
+      <button class="bindbtn" style="float:none" onclick="mocoRecord()">Trigger</button>
+      <button class="bindbtn" style="float:none" id="bind-fn-mocoRec"
+              onclick="startBindFunction('mocoRec')"
+              oncontextmenu="clearBindFunction('mocoRec');return false;"
+              title="Bind a key or gamepad button to start MoCo recording. Right-click to clear.">Bind</button>
+    </div>
+    <div class="func-card" id="fc-moco-play">
+      <span class="func-name">MoCo · Play / Stop</span>
+      <button class="bindbtn" style="float:none" onclick="mocoPlayPauseToggle()">Trigger</button>
+      <button class="bindbtn" style="float:none" id="bind-fn-mocoPlay"
+              onclick="startBindFunction('mocoPlay')"
+              oncontextmenu="clearBindFunction('mocoPlay');return false;"
+              title="Bind a key or gamepad button to toggle MoCo play/stop. Right-click to clear.">Bind</button>
+    </div>
+    <div class="func-card" id="fc-moco-home">
+      <span class="func-name">MoCo · Home</span>
+      <button class="bindbtn" style="float:none" onclick="mocoHome()">Trigger</button>
+      <button class="bindbtn" style="float:none" id="bind-fn-mocoHome"
+              onclick="startBindFunction('mocoHome')"
+              oncontextmenu="clearBindFunction('mocoHome');return false;"
+              title="Bind a key or gamepad button to home the take. Right-click to clear.">Bind</button>
+    </div>
   </div>
 
   <!-- FOCUS -->
@@ -265,12 +344,15 @@
       </div>
     </div>
     <div class="panel">
-      <div class="field2"><label>Zoom <button class="bindbtn" id="bind-zoom" onclick="startBind('zoom')" oncontextmenu="clearBind('zoom');return false;">Bind</button><span class="ro-inline v-gold" id="ro-zoom">0.500</span></label>
-        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-zoom" class="ps ps-gold" oninput="onSlider('zoom',this.value)"></div>
-      <div class="field2"><label>Aperture <button class="bindbtn" id="bind-aperture" onclick="startBind('aperture')" oncontextmenu="clearBind('aperture');return false;">Bind</button><span class="ro-inline v-gold" id="ro-aperture">0.500</span></label>
-        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-aperture" class="ps ps-gold" oninput="onSlider('aperture',this.value)"></div>
+      <!-- On-set order: focus, iris, zoom. "Iris" is the on-set term for aperture
+           but the underlying param id stays 'aperture' so bindings / mappings.json /
+           saved configs all keep working unchanged. -->
       <div class="field2"><label>Focus <button class="bindbtn" id="bind-focus" onclick="startBind('focus')" oncontextmenu="clearBind('focus');return false;">Bind</button><span class="ro-inline v-gold" id="ro-focus">0.500</span></label>
         <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-focus" class="ps ps-gold" oninput="onSlider('focus',this.value)"></div>
+      <div class="field2"><label>Iris <button class="bindbtn" id="bind-aperture" onclick="startBind('aperture')" oncontextmenu="clearBind('aperture');return false;">Bind</button><span class="ro-inline v-gold" id="ro-aperture">0.500</span></label>
+        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-aperture" class="ps ps-gold" oninput="onSlider('aperture',this.value)"></div>
+      <div class="field2"><label>Zoom <button class="bindbtn" id="bind-zoom" onclick="startBind('zoom')" oncontextmenu="clearBind('zoom');return false;">Bind</button><span class="ro-inline v-gold" id="ro-zoom">0.500</span></label>
+        <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-zoom" class="ps ps-gold" oninput="onSlider('zoom',this.value)"></div>
     </div>
   </div>
 
@@ -286,6 +368,52 @@
   <div id="cam-pos-panel" class="pos-panel"></div>
   <div class="grid g3" id="base-grid"></div>
   <div id="crane-pos-panel" class="pos-panel"></div>
+
+  <!-- VIRTUAL MOCO ─ record / playback of all bound params -->
+  <div class="section-label lbl-moco">Virtual MoCo
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center;font-size:.6rem;color:var(--muted)">
+      <button class="moco-btn small" onclick="mocoExportTake()" title="Save the current take to a .rxmove file">↑ Save</button>
+      <button class="moco-btn small" onclick="document.getElementById('moco-import').click()" title="Load takes from a .rxmove file">↓ Load</button>
+      <input type="file" id="moco-import" accept=".rxmove,.json,application/json" style="display:none" onchange="mocoImportTake(this.files[0])">
+      <span style="width:1px;height:14px;background:var(--border-soft)"></span>
+      <button class="moco-btn small moco-reset" onclick="mocoHardReset()" title="Erase all takes and reset colour bindings to defaults">⟲ Reset</button>
+      <span style="width:1px;height:14px;background:var(--border-soft)"></span>
+      <select id="moco-take-select" class="moco-take-select" onchange="mocoSelectTake(this.value)" title="Switch take"></select>
+      <span style="width:1px;height:14px;background:var(--border-soft)"></span>
+      <span id="moco-time" style="font-family:'JetBrains Mono',monospace;color:var(--text);min-width:74px;text-align:right">00:00.00</span>
+      <span id="moco-duration" style="font-family:'JetBrains Mono',monospace;color:var(--faint);min-width:74px">/ —</span>
+    </span>
+  </div>
+  <div class="moco-panel">
+    <div class="moco-transport">
+      <button class="moco-btn rec"   id="moco-rec"     onclick="mocoRecord()"     title="Start recording the ticked tracks">● REC</button>
+      <button class="moco-btn stop"  id="moco-stop"    onclick="mocoStop()"       title="Stop recording or playback">■ STOP</button>
+      <button class="moco-btn play"  id="moco-play"    onclick="mocoPlay()"       title="Play back the current take">▶ PLAY</button>
+      <button class="moco-btn small" id="moco-rewind"  onclick="mocoRewind()"     title="Jump playhead to start">⏮</button>
+      <button class="moco-btn small" id="moco-home"    onclick="mocoHome()"       title="Snap P-armed tracks to their recorded starting values">⌂ HOME</button>
+      <span style="flex:1"></span>
+      <button class="moco-btn small" id="moco-new"     onclick="mocoNewTake()"    title="Create a new empty take">+ New</button>
+      <button class="moco-btn small" id="moco-dupe"    onclick="mocoDuplicateTake()" title="Duplicate the current take — preserves the original, lets you overdub on the copy">⎘ Duplicate</button>
+      <button class="moco-btn small" id="moco-del"     onclick="mocoDeleteTake()" title="Delete the current take">✕ Delete</button>
+      <button class="moco-btn small" id="moco-rename"  onclick="mocoRenameTake()" title="Rename the current take">✎ Rename</button>
+    </div>
+    <div class="moco-status" id="moco-status">Idle — bind something, then press REC.</div>
+    <div class="moco-timeline">
+      <canvas id="moco-canvas" title="Click to seek · drag to scrub · wheel to zoom"></canvas>
+      <div class="moco-zoom-row">
+        <button class="moco-btn small" onclick="mocoZoom(0.5)"  title="Zoom out (show more time)">−</button>
+        <button class="moco-btn small" onclick="mocoZoom(2.0)"  title="Zoom in (show less time)">+</button>
+        <button class="moco-btn small" onclick="mocoZoomFit()"  title="Fit current take to view">⤢ Fit</button>
+        <span class="moco-zoom-label" id="moco-zoom-label">8.0s view</span>
+        <div class="moco-scroll" id="moco-scroll" title="Drag to pan along the timeline">
+          <div class="moco-scroll-thumb" id="moco-scroll-thumb"></div>
+        </div>
+      </div>
+    </div>
+    <div class="moco-tracks" id="moco-tracks">
+      <div class="moco-no-tracks">No bound params yet. Bind a wheel, stick, or key on any card above to make it recordable.</div>
+    </div>
+  </div>
 
   <!-- GAMEPAD DEBUG -->
   <div class="log-wrap">
@@ -903,7 +1031,20 @@ function tickAutolevel(){
     autolevelState = null;
   }
 }
-const FUNCTION_ACTIONS = { autolevel: triggerAutolevel };
+// Action map for bindable one-shots. The MoCo transport actions are
+// dispatched through small wrappers so a bound button calls into the
+// same code path the on-screen buttons do.
+function mocoPlayPauseToggle(){
+  if(typeof mocoState === 'undefined') return;
+  if(mocoState === 'playing' || mocoState === 'recording') mocoStop();
+  else mocoPlay();
+}
+const FUNCTION_ACTIONS = {
+  autolevel: triggerAutolevel,
+  mocoRec:   () => mocoRecord(),
+  mocoPlay:  () => mocoPlayPauseToggle(),
+  mocoHome:  () => mocoHome()
+};
 function fireFunctionAction(action){ const fn = FUNCTION_ACTIONS[action]; if(fn) fn(); }
 function persistAutolevelTuning(){
   const s=document.getElementById('auto-speed'), f=document.getElementById('auto-feather');
@@ -959,6 +1100,11 @@ function setCamera(path){
   setTimeout(()=>{ if(socket && socket.readyState===WebSocket.OPEN) applyLensSelection(selL.value); }, 300);
   logMsg('Active camera → '+path.split('.').pop());
   renderCamButtons();
+  // MoCo's tracks list is driven by `bindings`. The first render at startup
+  // fires before the active camera (and its bindings) have been resolved, so
+  // it only sees the legacy __default__ slot. Re-render now that the right
+  // slot is in scope so all bound params appear.
+  if(typeof mocoRenderUI === 'function') mocoRenderUI();
 }
 function updateCraneAvailability(onCrane){
   cameraOnCrane = !!onCrane;
@@ -981,7 +1127,10 @@ function populateCameras(list){
 }
 
 // ── Input binding ("learn") — bind ANY input (key / gamepad axis / button) to any parameter ──
-const PARAMS=['pan','tilt','roll','craneYaw','cranePitch','scope','baseX','baseY','baseZ','zoom','aperture','focus'];
+// Lens block listed in on-set order (focus, iris [aperture], zoom) so the MoCo
+// tracks list matches the on-screen card order. The id 'aperture' is preserved
+// for compatibility with mappings.json / saved configs — only the label is "Iris".
+const PARAMS=['pan','tilt','roll','craneYaw','cranePitch','scope','baseX','baseY','baseZ','focus','aperture','zoom'];
 const paramVal={}; PARAMS.forEach(p=>paramVal[p]=0.5);
 // Per-camera bindings: allBindings = { '<cameraPath>': { pan:..., tilt:... }, ... }
 // `bindings` always points at the active camera's slot (or '__default__' before any
@@ -1052,6 +1201,20 @@ document.addEventListener('keydown',e=>{
   }
   for(const [path,b] of Object.entries(camBindings)){
     if(b && b.kind==='key' && b.code===e.code){ setCamera(path); e.preventDefault(); return; }
+  }
+  // Spacebar = play/pause for MoCo timeline (unless typing in a form field
+  // or Space is bound to a function/camera, in which case the loops above
+  // already handled it and returned).
+  if(e.code === 'Space'){
+    const t = e.target;
+    const tag = t && t.tagName;
+    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable);
+    if(!typing){
+      if(mocoState === 'playing' || mocoState === 'recording') mocoStop();
+      else mocoPlay();
+      e.preventDefault();
+      return;
+    }
   }
   keysDown.add(e.code);
 });
@@ -1312,6 +1475,7 @@ function inputLoop(){
     }
   }
   renderGpDebug(pads);           // diagnostic — only renders when panel is shown
+  mocoTick();                    // Virtual MoCo: sample on record, drive sliders on playback
   gpPrev={}; for(const gp of pads){ if(gp) gpPrev[gp.index]={axes:Array.from(gp.axes),buttons:gp.buttons.map(b=>b.pressed)}; }
   requestAnimationFrame(inputLoop);
 }
@@ -1321,6 +1485,1493 @@ function pressedInput(inp,pads){
   return false;
 }
 requestAnimationFrame(inputLoop);
+
+// ─────────────────────────────────────────────────────────────────────────
+// VIRTUAL MOCO  (v2.0 — in-memory record/playback of all bound params)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Data model:
+//   take = {
+//     id, name, createdAt,
+//     durationMs,                              // populated on Stop
+//     tracks: { paramId: [{t: ms, v: 0..1}] }, // dense samples, RAF-rate (~60Hz)
+//   }
+//
+// Per-param checkboxes control whether a track is sampled (during record)
+// AND whether it's driven on playback. Default ticked.
+//
+// State machine: idle ↔ recording ↔ idle ↔ playing ↔ idle.
+// Stop always returns to idle. Rewind seeks playhead to 0 but doesn't change state.
+
+let mocoState = 'idle';           // 'idle' | 'recording' | 'playing'
+let mocoTakes = [];               // [{id, name, createdAt, durationMs, tracks: {paramId: [{t,v}]}}]
+let mocoActiveTakeId = '';        // id of the currently active take
+let mocoTake = null;              // === mocoTakes.find(t=>t.id===mocoActiveTakeId) — kept as a pointer so existing code keeps working
+let mocoTakeCounter = 1;
+let mocoStartT = 0;               // performance.now() reference when record/play started
+let mocoTrackPlay = {};           // {paramId: bool} — armed to play back during Rec or Play
+let mocoTrackRec  = {};           // {paramId: bool} — armed to record during Rec
+let mocoPlayhead = 0;             // ms within current take (for status display)
+let mocoPlayStart = {};           // {paramId: value} captured at Play/Rec start — for relative playback
+
+// ── Timeline view state (zoom + scroll) ─────────────────────────────────
+// mocoViewMs is the visible window duration in ms. mocoViewStartMs is the
+// time at the left edge of the canvas. Both update with zoom in/out and the
+// scrollbar; the playhead follows itself into view during playback/record.
+const MOCO_VIEW_DEFAULT_MS = 8000;
+const MOCO_VIEW_MIN_MS = 500;     // 0.5s of timeline visible at max zoom
+const MOCO_VIEW_MAX_MS = 600000;  // 10 min upper bound
+let mocoViewMs = MOCO_VIEW_DEFAULT_MS;
+let mocoViewStartMs = 0;
+
+// Restore takes + arming flags from localStorage so a refresh doesn't lose work.
+try {
+  const arr = JSON.parse(localStorage.getItem('rexy_moco_takes') || 'null');
+  if(Array.isArray(arr) && arr.length) mocoTakes = arr;
+  mocoActiveTakeId = localStorage.getItem('rexy_moco_active') || '';
+  // Migration from v2.0/v2.1 single-take storage. If we have a legacy take and
+  // no takes-array yet, wrap it in an array.
+  if(!mocoTakes.length){
+    const legacy = JSON.parse(localStorage.getItem('rexy_moco_take') || 'null');
+    if(legacy && legacy.tracks){ mocoTakes = [legacy]; mocoActiveTakeId = legacy.id; }
+  }
+  const tp = JSON.parse(localStorage.getItem('rexy_moco_track_play') || '{}');
+  const tr = JSON.parse(localStorage.getItem('rexy_moco_track_rec')  || '{}');
+  if(tp && typeof tp === 'object') mocoTrackPlay = tp;
+  if(tr && typeof tr === 'object') mocoTrackRec  = tr;
+  // Legacy migration — v2.0 used a single "enabled" flag. Treat it as P-armed.
+  const legacyEn = JSON.parse(localStorage.getItem('rexy_moco_track_enabled') || 'null');
+  if(legacyEn && typeof legacyEn === 'object' && !Object.keys(tp).length){
+    for(const k in legacyEn) mocoTrackPlay[k] = legacyEn[k] !== false;
+  }
+  const tc = parseInt(localStorage.getItem('rexy_moco_take_counter') || '1', 10);
+  if(!isNaN(tc)) mocoTakeCounter = tc;
+  // Defensive cleanup — older versions could leave both P and R set true for
+  // the same param. The UI shows both lit, which is confusing. Force mutual
+  // exclusion: P wins (preserves playback intent on a previously captured
+  // track), R gets cleared.
+  for(const k in mocoTrackRec){
+    if(mocoTrackPlay[k] === true && mocoTrackRec[k] === true) mocoTrackRec[k] = false;
+  }
+} catch(e) {}
+
+// Make sure we always have at least one take. Set mocoTake pointer to active.
+function mocoResolveActive(){
+  if(!mocoTakes.length) mocoTakes = [mocoFreshTake()];
+  let t = mocoTakes.find(x => x.id === mocoActiveTakeId);
+  if(!t){ t = mocoTakes[0]; mocoActiveTakeId = t.id; }
+  mocoTake = t;
+}
+
+function mocoFreshTake(){
+  return {
+    id: 'take-' + Date.now(),
+    name: 'Take ' + (mocoTakeCounter++),
+    createdAt: new Date().toISOString(),
+    durationMs: 0,
+    tracks: {}                    // populated on first sample per param
+  };
+}
+
+function mocoBoundParams(){
+  // A param is "recordable" if it has a binding (axis OR keys) for the active camera.
+  // Slider-drag-only params won't appear here — they're not performance inputs.
+  return PARAMS.filter(p => bindings[p]);
+}
+
+// ── Track colour palette ────────────────────────────────────────────────
+// Defaults: distinct hues grouped by category so a glance at the timeline tells
+// you what kind of move a track is. Per-track overrides via the colour picker.
+// Defaults pull from columns 0/1/2 of each MOCO_PALETTE row, so they agree
+// with the picker's left edge. Family → row mapping:
+//   Wheels  (pan / tilt / roll)        → row 1 (pinks / magentas / red)
+//   Lens    (focus / iris / zoom)      → row 2 (yellows / oranges)
+//   Grip    (craneYaw / Pitch / scope) → row 3 (blues)
+//   Base    (baseX / Y / Z)            → row 4 (greens)
+const MOCO_COLOURS_DEFAULT = {
+  pan:        '#cc3366',
+  tilt:       '#ff0000',
+  roll:       '#ffccff',
+  focus:      '#ffcc00',
+  aperture:   '#ff6600',
+  zoom:       '#ffff99',
+  craneYaw:   '#395d82',
+  cranePitch: '#0000ff',
+  scope:      '#ccffff',
+  baseX:      '#339933',
+  baseY:      '#00ff00',
+  baseZ:      '#99ff99'
+};
+// 32 distinct swatches — 4 rows × 8 hues. Top two rows vivid (around the wheel),
+// bottom two rows the pastel/light equivalents so users can pick a hue at two
+// luminance levels and keep curves distinguishable on the dark canvas.
+// Rexy swatch v3 — 32 hand-picked colours, reshuffled so each column reads
+// as distinct from its neighbours. Columns 0/1/2 of each row hand the three
+// params in that family clearly different defaults (e.g. pan = dark pink,
+// tilt = pure red, roll = deep purple). The remaining columns offer
+// alternates spread across the family's range.
+const MOCO_PALETTE = [
+  '#cc3366','#ff0000','#ffccff','#ff0099','#ff99cc','#ff33ff','#cc00cc','#660066',
+  '#ffcc00','#ff6600','#ffff99','#cc9966','#ffff33','#ffcc66','#cc6600','#993300',
+  '#395d82','#0000ff','#ccffff','#9999cc','#6699ff','#33ccff','#0099cc','#006699',
+  '#339933','#00ff00','#99ff99','#00cc66','#33ffcc','#66cc66','#009900','#006600'
+];
+
+let mocoTrackColour = {};
+try { mocoTrackColour = JSON.parse(localStorage.getItem('rexy_moco_track_colour') || '{}'); } catch(e){}
+
+function mocoColour(p){
+  if(mocoTrackColour[p]) return mocoTrackColour[p];
+  return MOCO_COLOURS_DEFAULT[p] || '#a1a1aa';
+}
+function mocoSetTrackColour(p, hex){
+  if(hex) mocoTrackColour[p] = hex;
+  else    delete mocoTrackColour[p];
+  localStorage.setItem('rexy_moco_track_colour', JSON.stringify(mocoTrackColour));
+  mocoRenderUI();
+}
+
+// Popup colour picker. Anchored to the clicked element. Closes on outside click.
+let _mocoPickerEl = null;
+function mocoShowColourPicker(p, anchor){
+  // Toggle off if already open
+  if(_mocoPickerEl){ _mocoPickerEl.remove(); _mocoPickerEl = null; return; }
+  const rect = anchor.getBoundingClientRect();
+  const popup = document.createElement('div');
+  popup.className = 'moco-colour-popup';
+  popup.style.left = Math.round(rect.left) + 'px';
+  popup.style.top  = Math.round(rect.bottom + 4) + 'px';
+  popup.innerHTML =
+    MOCO_PALETTE.map(c => `<button class="moco-swatch" style="background:${c}" data-c="${c}" title="${c}"></button>`).join('') +
+    `<button class="moco-swatch-reset" data-c="reset">↺ Reset to default</button>`;
+  popup.addEventListener('click', e => {
+    const t = e.target.closest('[data-c]');
+    if(!t) return;
+    const c = t.dataset.c;
+    mocoSetTrackColour(p, c === 'reset' ? null : c);
+    popup.remove(); _mocoPickerEl = null;
+  });
+  document.body.appendChild(popup);
+  _mocoPickerEl = popup;
+  // Close on outside click. setTimeout to skip the current click event.
+  setTimeout(() => {
+    const closer = (e) => {
+      if(_mocoPickerEl && !_mocoPickerEl.contains(e.target) && e.target !== anchor){
+        _mocoPickerEl.remove(); _mocoPickerEl = null;
+        document.removeEventListener('mousedown', closer);
+      }
+    };
+    document.addEventListener('mousedown', closer);
+  }, 0);
+}
+
+// ── Canvas timeline ─────────────────────────────────────────────────────
+// Single canvas under the transport. Background grid, one polyline per
+// recorded track (colour from MOCO_COLOURS), a vertical playhead.
+// Click to seek, click+drag to scrub. Redraws on tick + on resize.
+
+let mocoCanvas = null, mocoCtx = null;
+let mocoCanvasW = 0, mocoCanvasH = 0;
+let mocoScrubbing = false;
+let mocoWasPlayingBeforeScrub = false;
+// When non-null: dragging anchor[idx] of track `param`. Captures pointerId
+// for releaseCapture on up. mocoPersistTakes() runs on pointerup.
+let mocoAnchorDrag = null;
+const MOCO_ANCHOR_HIT_PX = 9;
+
+// Test whether the pointer event sits over an anchor dot. Returns the
+// {param, idx} of the topmost E-enabled track's matching anchor, or null.
+// Iterates in reverse render order so anchors that visually overlap pick
+// the one drawn last (on top).
+function mocoAnchorHitTest(e){
+  if(!mocoTake || !mocoTake.tracks) return null;
+  const rect = mocoCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const h = mocoCanvasH;
+  const plotH = h - 14;
+  const keys = Object.keys(mocoTake.tracks).filter(p => mocoIsTrackE(p));
+  for(let k = keys.length - 1; k >= 0; k--){
+    const p = keys[k];
+    const anchors = mocoEditAnchors(p);
+    if(!anchors) continue;
+    for(let i = 0; i < anchors.length; i++){
+      const a = anchors[i];
+      const x = mocoTimeToX(a.t);
+      const y = plotH - (a.v * plotH);
+      if(Math.hypot(mx - x, my - y) <= MOCO_ANCHOR_HIT_PX){
+        return { param: p, idx: i };
+      }
+    }
+  }
+  return null;
+}
+
+// Insert a new anchor at the pointer's time on the topmost E-on track. Picks
+// the track whose spline value at the clicked time is closest to the clicked
+// y — so if two E-on tracks overlap, the one you visually clicked nearest is
+// the one that gets the new anchor. Pinned: anchor t lands inside the take's
+// existing time range; no insertion past either end.
+function mocoInsertAnchorAt(e){
+  if(!mocoTake || !mocoTake.tracks) return;
+  const rect = mocoCanvas.getBoundingClientRect();
+  const mx = Math.max(0, Math.min(rect.width,  e.clientX - rect.left));
+  const my = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+  const plotH = mocoCanvasH - 14;
+  const t = mocoXToTime(mx);
+  const clickV = Math.max(0, Math.min(1, 1 - (my / plotH)));
+  // Find the closest E-on track at this time.
+  let best = null, bestDist = Infinity;
+  for(const p in mocoTake.tracks){
+    if(!mocoIsTrackE(p)) continue;
+    const anchors = mocoEditAnchors(p);
+    if(!anchors || anchors.length < 2) continue;
+    if(t <= anchors[0].t || t >= anchors[anchors.length-1].t) continue;
+    const v = mocoEvalAnchors(anchors, t);
+    if(v == null) continue;
+    const d = Math.abs(v - clickV);
+    if(d < bestDist){ bestDist = d; best = { p, anchors, v }; }
+  }
+  if(!best){
+    mocoSetStatus('Double-click on a track curve in E mode to add an anchor.');
+    return;
+  }
+  // Insert at the right time slot. Use the clicked y if it's "close enough" to
+  // the spline (within 10% of slider), otherwise use the spline value at t so
+  // the new anchor lands on the existing curve. This makes single-click adds
+  // non-destructive and explicit pull-off-curve edits possible.
+  const useClickV = Math.abs(clickV - best.v) > 0.10;
+  const newAnchor = { t: t, v: useClickV ? clickV : best.v };
+  let i = 0;
+  while(i < best.anchors.length && best.anchors[i].t < t) i++;
+  best.anchors.splice(i, 0, newAnchor);
+  mocoPersistTakes();
+  mocoCanvasDraw();
+  mocoSetStatus(`Added anchor to ${best.p} at ${(t/1000).toFixed(2)}s.`);
+}
+
+// Remove an anchor by index. Endpoints (index 0 and last) are protected so
+// the take's start and end times stay intact.
+function mocoRemoveAnchor(p, idx){
+  const anchors = mocoEditAnchors(p);
+  if(!anchors) return;
+  if(idx === 0 || idx === anchors.length - 1){
+    mocoSetStatus('Endpoints are pinned — can\'t remove the first or last anchor.');
+    return;
+  }
+  anchors.splice(idx, 1);
+  mocoPersistTakes();
+  mocoCanvasDraw();
+  mocoSetStatus(`Removed anchor from ${p}.`);
+}
+
+function mocoAnchorDragMove(e){
+  if(!mocoAnchorDrag || !mocoTake) return;
+  const anchors = mocoEditAnchors(mocoAnchorDrag.param);
+  if(!anchors) return;
+  const a = anchors[mocoAnchorDrag.idx];
+  if(!a) return;
+  const rect = mocoCanvas.getBoundingClientRect();
+  const mx = Math.max(0, Math.min(rect.width,  e.clientX - rect.left));
+  const my = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+  const plotH = mocoCanvasH - 14;
+  // Map pixel back to (t, v). Clamp v to [0,1]. Clamp t between neighbours so
+  // anchors can't cross each other (keeps the spline monotonic in time).
+  const newT = mocoXToTime(mx);
+  const newV = Math.max(0, Math.min(1, 1 - (my / plotH)));
+  const prev = anchors[mocoAnchorDrag.idx - 1];
+  const next = anchors[mocoAnchorDrag.idx + 1];
+  const tMin = prev ? prev.t + 1 : 0;
+  const tMax = next ? next.t - 1 : (mocoTake.durationMs || newT);
+  // First/last anchors are pinned in time so the spline endpoints don't drift.
+  if(mocoAnchorDrag.idx === 0 || mocoAnchorDrag.idx === anchors.length - 1){
+    a.v = newV;
+  } else {
+    a.t = Math.max(tMin, Math.min(tMax, newT));
+    a.v = newV;
+  }
+  mocoCanvasDraw();
+}
+
+function mocoCanvasInit(){
+  mocoCanvas = document.getElementById('moco-canvas');
+  if(!mocoCanvas) return;
+  mocoCtx = mocoCanvas.getContext('2d');
+  mocoCanvasResize();
+  window.addEventListener('resize', mocoCanvasResize);
+  // Pointer interaction — click to seek, drag to scrub, drag anchors when E
+  // is on. Disabled during recording so a stray click can't corrupt a take.
+  mocoCanvas.addEventListener('pointerdown', e => {
+    if(mocoState === 'recording') return;          // recording is sacred — don't touch
+    // Anchor hit-test first — if we're near one, drag it instead of scrubbing.
+    const hit = mocoAnchorHitTest(e);
+    if(hit){
+      mocoAnchorDrag = hit;
+      mocoCanvas.setPointerCapture(e.pointerId);
+      mocoCanvas.classList.add('grabbing');
+      return;
+    }
+    mocoScrubbing = true;
+    mocoWasPlayingBeforeScrub = (mocoState === 'playing');
+    if(mocoWasPlayingBeforeScrub) mocoState = 'idle';  // pause during scrub
+    mocoCanvas.setPointerCapture(e.pointerId);
+    mocoCanvas.classList.add('grabbing');
+    mocoCanvasScrubFromEvent(e);
+  });
+  mocoCanvas.addEventListener('pointermove', e => {
+    if(mocoAnchorDrag){ mocoAnchorDragMove(e); return; }
+    if(mocoScrubbing) mocoCanvasScrubFromEvent(e);
+    mocoCanvasHoverFromEvent(e);
+    // Cursor — show "grab" when near the playhead OR an anchor for affordance
+    if(!mocoScrubbing){
+      const hit = mocoAnchorHitTest(e);
+      if(hit){ mocoCanvas.classList.add('grab'); return; }
+      const rect = mocoCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const phX = mocoTimeToX(mocoPlayhead);
+      const near = Math.abs(x - phX) <= 8;
+      mocoCanvas.classList.toggle('grab', near);
+    }
+  });
+  mocoCanvas.addEventListener('pointerleave', () => {
+    mocoHoverHide();
+    mocoCanvas.classList.remove('grab');
+  });
+  mocoCanvas.addEventListener('pointerup', e => {
+    mocoCanvas.classList.remove('grabbing');
+    if(mocoAnchorDrag){
+      mocoAnchorDrag = null;
+      mocoCanvas.releasePointerCapture(e.pointerId);
+      mocoPersistTakes();                          // bake edited anchors into storage
+      return;
+    }
+    if(!mocoScrubbing) return;
+    mocoScrubbing = false;
+    mocoCanvas.releasePointerCapture(e.pointerId);
+    if(mocoWasPlayingBeforeScrub){
+      // Resume playback from the scrubbed position
+      mocoCapturePlayStart();
+      mocoStartT = performance.now() - mocoPlayhead;
+      mocoState = 'playing';
+      mocoSetStatus('Resumed playback after scrub.');
+    }
+    mocoRenderUI();
+  });
+  // Double-click anywhere on the canvas inserts a new anchor on the nearest
+  // E-on track's spline at that x position. Useful for sneaking extra control
+  // into a region the RDP simplifier flattened too aggressively.
+  mocoCanvas.addEventListener('dblclick', e => mocoInsertAnchorAt(e));
+  // Right-click an anchor to remove it. Endpoints are protected so the take's
+  // start and end times stay stable.
+  mocoCanvas.addEventListener('contextmenu', e => {
+    const hit = mocoAnchorHitTest(e);
+    if(!hit){ return; }                          // let the default menu show off-anchor
+    e.preventDefault();
+    mocoRemoveAnchor(hit.param, hit.idx);
+  });
+  // Mouse-wheel zoom — anchored at the cursor's time
+  mocoCanvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = mocoCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const anchorT = mocoViewStartMs + (x / rect.width) * mocoViewMs;
+    const factor = e.deltaY < 0 ? 0.85 : 1.15;     // wheel up = zoom in
+    mocoSetView(mocoViewMs * factor, anchorT - (x / rect.width) * (mocoViewMs * factor));
+  }, { passive: false });
+
+  // Scrollbar — drag the thumb (or click in the track) to pan
+  const scrollEl = document.getElementById('moco-scroll');
+  const thumbEl  = document.getElementById('moco-scroll-thumb');
+  if(scrollEl && thumbEl){
+    let dragging = false;
+    let dragOffset = 0;          // px offset within the thumb where the drag started
+    const total = () => Math.max(mocoViewMs, (mocoTake && mocoTake.durationMs) ? mocoTake.durationMs : 0);
+    const startDrag = e => {
+      const r = scrollEl.getBoundingClientRect();
+      const tr = thumbEl.getBoundingClientRect();
+      const within = e.clientX >= tr.left && e.clientX <= tr.right;
+      dragOffset = within ? (e.clientX - tr.left) : (tr.width / 2);
+      dragging = true;
+      moveTo(e);
+      scrollEl.setPointerCapture(e.pointerId);
+    };
+    const moveTo = e => {
+      if(!dragging) return;
+      const r = scrollEl.getBoundingClientRect();
+      const T = total();
+      const thumbW = Math.max(14, (mocoViewMs / T) * r.width);
+      let leftPx = e.clientX - r.left - dragOffset;
+      leftPx = Math.max(0, Math.min(r.width - thumbW, leftPx));
+      const startFrac = leftPx / r.width;
+      mocoSetView(mocoViewMs, startFrac * T);
+    };
+    scrollEl.addEventListener('pointerdown', startDrag);
+    scrollEl.addEventListener('pointermove', moveTo);
+    scrollEl.addEventListener('pointerup', e => { dragging = false; scrollEl.releasePointerCapture(e.pointerId); });
+    scrollEl.addEventListener('pointercancel', () => { dragging = false; });
+  }
+  mocoUpdateZoomUI();
+}
+
+// ── View window helpers (zoom + scroll) ─────────────────────────────────
+// Live edge of the take — durationMs once recorded; during a record/play
+// pass the playhead is the running tip. While recording we also extend the
+// effective duration by the auto-follow's trail margin so the view can
+// scroll *past* the playhead, keeping it pinned at the 80% line instead of
+// rammed against the right edge.
+function mocoEffectiveDuration(){
+  const dur = (mocoTake && mocoTake.durationMs) ? mocoTake.durationMs : 0;
+  const buffer = mocoState === 'recording' ? mocoViewMs * (1 - MOCO_FOLLOW_FRAC) : 0;
+  return Math.max(dur, (mocoPlayhead || 0) + buffer);
+}
+function mocoClampView(viewMs, startMs){
+  const v = Math.max(MOCO_VIEW_MIN_MS, Math.min(MOCO_VIEW_MAX_MS, viewMs));
+  const total = Math.max(v, mocoEffectiveDuration());
+  // Allow scroll up to the live edge — during recording this grows with the
+  // playhead so the view auto-follows past the initial 8s window.
+  const maxStart = Math.max(0, total - v);
+  const s = Math.max(0, Math.min(maxStart, startMs));
+  return { viewMs: v, startMs: s };
+}
+function mocoSetView(viewMs, startMs){
+  const c = mocoClampView(viewMs, startMs);
+  mocoViewMs = c.viewMs;
+  mocoViewStartMs = c.startMs;
+  mocoUpdateZoomUI();
+  mocoCanvasDraw();
+}
+function mocoZoom(factor){
+  // Zoom around the playhead if it's visible, otherwise around the centre.
+  const w = mocoCanvasW || 1;
+  const phX = mocoTimeToX(mocoPlayhead);
+  const anchorX = (phX >= 0 && phX <= w) ? phX : w / 2;
+  const anchorT = mocoViewStartMs + (anchorX / w) * mocoViewMs;
+  const newView = mocoViewMs / factor;             // >1 = zoom in
+  mocoSetView(newView, anchorT - (anchorX / w) * newView);
+}
+function mocoZoomFit(){
+  const dur = (mocoTake && mocoTake.durationMs) ? mocoTake.durationMs : 0;
+  if(dur > 0){
+    mocoSetView(dur, 0);
+  } else {
+    mocoSetView(MOCO_VIEW_DEFAULT_MS, 0);
+  }
+}
+// Auto-scroll during record/play so the playhead never reaches the right
+// edge of the view. As soon as it crosses 80% of the visible window we
+// slide the view forward by the same delta — tick-by-tick — so the
+// playhead appears pinned at the 80% line while the timeline beneath it
+// glides past. Velocity matches the playhead, so the scroll reads as
+// smooth motion rather than a jump.
+const MOCO_FOLLOW_FRAC = 0.8;
+function mocoFollowPlayhead(){
+  if(mocoState !== 'recording' && mocoState !== 'playing') return;
+  const trail = mocoViewMs * MOCO_FOLLOW_FRAC;
+  const limit = mocoViewStartMs + trail;
+  if(mocoPlayhead > limit){
+    // Shift view forward so playhead lands exactly at the trail line.
+    mocoSetView(mocoViewMs, mocoPlayhead - trail);
+  } else if(mocoPlayhead < mocoViewStartMs){
+    // Playhead jumped backward (e.g. Rewind) and is now off-screen left.
+    // Snap it to the same 80% line in a single step.
+    mocoSetView(mocoViewMs, Math.max(0, mocoPlayhead - trail));
+  }
+}
+function mocoUpdateZoomUI(){
+  const lbl = document.getElementById('moco-zoom-label');
+  if(lbl) lbl.textContent = (mocoViewMs / 1000).toFixed(mocoViewMs < 1000 ? 2 : 1) + 's view';
+  const scrollEl = document.getElementById('moco-scroll');
+  const thumbEl  = document.getElementById('moco-scroll-thumb');
+  if(!scrollEl || !thumbEl) return;
+  const r = scrollEl.getBoundingClientRect();
+  const total = Math.max(mocoViewMs, (mocoTake && mocoTake.durationMs) ? mocoTake.durationMs : 0);
+  const thumbW = Math.max(14, (mocoViewMs / total) * r.width);
+  const leftPx = (mocoViewStartMs / total) * r.width;
+  thumbEl.style.width = thumbW + 'px';
+  thumbEl.style.left  = leftPx + 'px';
+}
+
+function mocoCanvasResize(){
+  if(!mocoCanvas) return;
+  const rect = mocoCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  mocoCanvasW = Math.max(1, Math.floor(rect.width));
+  mocoCanvasH = Math.max(1, Math.floor(rect.height));
+  mocoCanvas.width  = mocoCanvasW * dpr;
+  mocoCanvas.height = mocoCanvasH * dpr;
+  mocoCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  mocoUpdateZoomUI();
+  mocoCanvasDraw();
+}
+
+function mocoCanvasScrubFromEvent(e){
+  if(!mocoTake) return;
+  const rect = mocoCanvas.getBoundingClientRect();
+  const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+  // Convert to time using the view window. Clamp to the recorded end if we
+  // have one — but on an empty new take, allow the playhead to be placed
+  // anywhere in the visible window (so it can still be dragged for "feel").
+  let t = mocoViewStartMs + (x / rect.width) * mocoViewMs;
+  const dur = mocoTake.durationMs || 0;
+  if(dur > 0) t = Math.max(0, Math.min(dur, t));
+  else        t = Math.max(0, t);
+  mocoPlayhead = t;
+  // Drive P-armed tracks to the scrubbed time so the camera follows the scrub.
+  // Capture playStart if we haven't yet (first scrub action since idle).
+  if(!Object.keys(mocoPlayStart).length) mocoCapturePlayStart();
+  for(const p in mocoTake.tracks){
+    if(!mocoIsTrackP(p)) continue;
+    mocoDriveTrackRelative(p, t);
+  }
+  mocoUpdateTime();
+  mocoCanvasDraw();
+}
+
+// Floating tooltip showing the time at the cursor + per-track values at that time.
+// Built on demand from a single shared DOM element.
+let _mocoHoverEl = null;
+function mocoHoverHide(){ if(_mocoHoverEl){ _mocoHoverEl.style.display = 'none'; } }
+function mocoCanvasHoverFromEvent(e){
+  if(!mocoTake) return;
+  const rect = mocoCanvas.getBoundingClientRect();
+  const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+  const t = mocoViewStartMs + (x / rect.width) * mocoViewMs;
+  if(!_mocoHoverEl){
+    _mocoHoverEl = document.createElement('div');
+    _mocoHoverEl.className = 'moco-hover';
+    document.body.appendChild(_mocoHoverEl);
+  }
+  // Build content — time line + each track that has a sample at this time
+  const lines = [`<b>${(t/1000).toFixed(2)}s</b>`];
+  if(mocoTake.tracks){
+    for(const p in mocoTake.tracks){
+      const trk = mocoTake.tracks[p];
+      if(!trk || !trk.length) continue;
+      const v = mocoEvalTrack(trk, t);
+      if(v == null) continue;
+      lines.push(`<span style="color:${mocoColour(p)}">●</span> ${p}: ${v.toFixed(3)}`);
+    }
+  }
+  _mocoHoverEl.innerHTML = lines.join('<br>');
+  _mocoHoverEl.style.display = 'block';
+  // Position near cursor, offset so it doesn't sit under the pointer
+  _mocoHoverEl.style.left = (e.clientX + 12) + 'px';
+  _mocoHoverEl.style.top  = (e.clientY + 12) + 'px';
+}
+
+// Map a time-in-ms to an x pixel using the current view window.
+function mocoTimeToX(t){
+  const w = mocoCanvasW;
+  return ((t - mocoViewStartMs) / mocoViewMs) * w;
+}
+// Inverse: an x pixel back to ms.
+function mocoXToTime(x){
+  return mocoViewStartMs + (x / mocoCanvasW) * mocoViewMs;
+}
+
+function mocoCanvasDraw(){
+  if(!mocoCtx) return;
+  const w = mocoCanvasW, h = mocoCanvasH;
+  const ctx = mocoCtx;
+  ctx.clearRect(0, 0, w, h);
+  if(w < 4 || h < 4) return;
+
+  // View window in ms
+  const vStart = mocoViewStartMs;
+  const vEnd   = mocoViewStartMs + mocoViewMs;
+  const dur    = (mocoTake && mocoTake.durationMs) ? mocoTake.durationMs : 0;
+
+  // Adaptive grid step — keeps the second markers from getting too dense
+  // when zoomed out. Choose a step from {0.1, 0.2, 0.5, 1, 2, 5, 10, ...}s
+  // such that markers are at least ~40px apart.
+  const candidates = [0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300, 600];
+  let stepS = 1;
+  for(const c of candidates){
+    if((c * 1000 / mocoViewMs) * w >= 40){ stepS = c; break; }
+    stepS = c;
+  }
+  const subS = stepS / 5;
+
+  // Subgrid
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+  ctx.lineWidth = 1;
+  for(let t = Math.ceil(vStart / (subS*1000)) * (subS*1000); t <= vEnd + 0.001; t += subS*1000){
+    if(Math.abs(t % (stepS*1000)) < 0.5) continue;
+    const x = Math.round(mocoTimeToX(t)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h - 14); ctx.stroke();
+  }
+  // Main grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  for(let t = Math.ceil(vStart / (stepS*1000)) * (stepS*1000); t <= vEnd + 0.001; t += stepS*1000){
+    const x = Math.round(mocoTimeToX(t)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h - 14); ctx.stroke();
+  }
+  // Horizontal mid-line (slider 0.5)
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath(); ctx.moveTo(0, (h - 14) / 2); ctx.lineTo(w, (h - 14) / 2); ctx.stroke();
+
+  // Time labels along the bottom
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '9px "JetBrains Mono", monospace';
+  ctx.textBaseline = 'bottom';
+  ctx.textAlign = 'left';
+  for(let t = Math.ceil(vStart / (stepS*1000)) * (stepS*1000); t <= vEnd + 0.001; t += stepS*1000){
+    const label = (stepS < 1) ? (t/1000).toFixed(1) + 's' : Math.round(t/1000) + 's';
+    const x = mocoTimeToX(t) + 3;
+    ctx.fillText(label, x, h - 2);
+  }
+  // Duration label far-right
+  if(dur > 0){
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillText(`${(dur/1000).toFixed(2)}s`, w - 4, h - 2);
+    ctx.textAlign = 'left';
+  }
+
+  // Shaded region for the recorded take's end (so you can see what's empty space)
+  if(dur > 0 && dur < vEnd){
+    const xEnd = Math.max(0, Math.min(w, mocoTimeToX(dur)));
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(xEnd, 0, w - xEnd, h - 14);
+  }
+
+  // Each track's curve — clip samples to the visible window. Tracks with E on
+  // get drawn as the smoothed spline through their anchors instead of the raw
+  // polyline; the raw samples appear as a faint ghost beneath for reference.
+  if(mocoTake && mocoTake.tracks){
+    const plotH = h - 14;
+    for(const p in mocoTake.tracks){
+      const trk = mocoTake.tracks[p];
+      if(!trk || trk.length < 2) continue;
+      const visible = mocoIsTrackP(p) || mocoIsTrackR(p) || mocoIsTrackE(p);
+      const editOn = mocoIsTrackE(p);
+      const anchors = editOn ? mocoEditAnchors(p) : null;
+      ctx.strokeStyle = mocoColour(p);
+      // Raw polyline — dimmed under the spline when editing, full when not.
+      ctx.globalAlpha = editOn ? 0.18 : (visible ? 1.0 : 0.25);
+      ctx.lineWidth = editOn ? 1.0 : 1.6;
+      ctx.beginPath();
+      let started = false;
+      for(let i = 0; i < trk.length; i++){
+        const s = trk[i];
+        if(s.t < vStart - mocoViewMs || s.t > vEnd + mocoViewMs) continue;
+        const x = mocoTimeToX(s.t);
+        const y = plotH - (s.v * plotH);
+        if(!started){ ctx.moveTo(x, y); started = true; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // Edited spline — sample one value per pixel column for smoothness.
+      if(editOn && anchors && anchors.length){
+        ctx.globalAlpha = 1.0;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        const dur = mocoTake.durationMs || (anchors[anchors.length-1].t);
+        const xStart = Math.max(0, mocoTimeToX(anchors[0].t));
+        const xEnd   = Math.min(w, mocoTimeToX(anchors[anchors.length-1].t));
+        let first = true;
+        for(let x = xStart; x <= xEnd; x++){
+          const t = mocoXToTime(x);
+          if(t < anchors[0].t || t > anchors[anchors.length-1].t) continue;
+          const v = mocoEvalAnchors(anchors, t);
+          if(v == null) continue;
+          const y = plotH - (Math.max(0, Math.min(1, v)) * plotH);
+          if(first){ ctx.moveTo(x, y); first = false; }
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1.0;
+
+    // Anchor dots — drawn after all curves so they sit on top. Each E-enabled
+    // track contributes its anchors as draggable handles.
+    for(const p in mocoTake.tracks){
+      if(!mocoIsTrackE(p)) continue;
+      const anchors = mocoEditAnchors(p);
+      if(!anchors) continue;
+      ctx.fillStyle = mocoColour(p);
+      ctx.strokeStyle = '#0d1219';
+      ctx.lineWidth = 2;
+      for(let i = 0; i < anchors.length; i++){
+        const a = anchors[i];
+        if(a.t < vStart - mocoViewMs || a.t > vEnd + mocoViewMs) continue;
+        const x = mocoTimeToX(a.t);
+        const y = plotH - (a.v * plotH);
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Playhead — always drawn (even at t=0 on an empty new take). If the
+  // playhead is off-screen, pin a small arrow to the nearest edge so the
+  // user can see which way it went.
+  const px = mocoTimeToX(mocoPlayhead);
+  const phColor = mocoState === 'recording' ? '#ff5a48'
+                : mocoState === 'playing'   ? '#22c55e'
+                : '#e7eaf0';
+  if(px < 0){
+    ctx.fillStyle = phColor;
+    ctx.beginPath();
+    ctx.moveTo(2, (h-14)/2 - 6); ctx.lineTo(2, (h-14)/2 + 6); ctx.lineTo(10, (h-14)/2); ctx.closePath();
+    ctx.fill();
+  } else if(px > w){
+    ctx.fillStyle = phColor;
+    ctx.beginPath();
+    ctx.moveTo(w-2, (h-14)/2 - 6); ctx.lineTo(w-2, (h-14)/2 + 6); ctx.lineTo(w-10, (h-14)/2); ctx.closePath();
+    ctx.fill();
+  } else {
+    const pxR = Math.round(px) + 0.5;
+    ctx.strokeStyle = phColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pxR, 0);
+    ctx.lineTo(pxR, h - 14);
+    ctx.stroke();
+    // Bigger flag-style head so it's obviously grabbable.
+    ctx.fillStyle = phColor;
+    ctx.beginPath();
+    ctx.moveTo(pxR - 7, 0);
+    ctx.lineTo(pxR + 7, 0);
+    ctx.lineTo(pxR + 7, 8);
+    ctx.lineTo(pxR,    14);
+    ctx.lineTo(pxR - 7, 8);
+    ctx.closePath();
+    ctx.fill();
+    // White grip dots on the flag
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(pxR - 3, 4, 1.5, 1.5);
+    ctx.fillRect(pxR + 1.5, 4, 1.5, 1.5);
+  }
+}
+
+function mocoHasData(p){
+  return !!(mocoTake && mocoTake.tracks && mocoTake.tracks[p] && mocoTake.tracks[p].length);
+}
+
+// ── Per-track edit state (Bezier-lite / anchor editing) ────────────────
+// When the user clicks "E" on a row, the raw samples for that param get
+// decimated into a small set of anchors. Playback then evaluates a smooth
+// Catmull-Rom spline through those anchors instead of replaying the raw
+// samples — the user can drag the anchor dots on the canvas to reshape the
+// move. Click E again to disable (edit data is kept in case they want it
+// back). Clicking R clears both P and E so the track can be re-recorded.
+let mocoTrackEdit = {};
+try { mocoTrackEdit = JSON.parse(localStorage.getItem('rexy_moco_track_edit')||'{}'); } catch(e){}
+function mocoIsTrackE(p){ return mocoTrackEdit[p] === true; }
+const MOCO_EDIT_MIN_ANCHORS = 6;
+const MOCO_EDIT_MAX_ANCHORS = 40;
+function mocoEditTake(){ return mocoTake; }                 // shortcut for clarity
+function mocoEditAnchors(p){
+  // Anchors live on the take so they save/load with it. Lazy-created.
+  if(!mocoTake) return null;
+  if(!mocoTake.edits) mocoTake.edits = {};
+  return mocoTake.edits[p] || null;
+}
+// Ramer-Douglas-Peucker simplification — returns indices of `samples` whose
+// value deviates from a straight-line approximation by more than `eps` (in
+// slider units, 0..1). Anchors cluster where the move turns sharply and
+// thin out across smooth stretches — much truer to the original than the
+// old uniform-time spacing, especially on fast/complex takes.
+function rdpIndices(samples, eps){
+  if(samples.length < 3) return samples.map((_, i) => i);
+  const kept = [0, samples.length - 1];
+  const stack = [[0, samples.length - 1]];
+  while(stack.length){
+    const [s, e] = stack.pop();
+    const sP = samples[s], eP = samples[e];
+    const dt = (eP.t - sP.t) || 1;
+    let maxDist = 0, maxIdx = -1;
+    for(let i = s + 1; i < e; i++){
+      const p = samples[i];
+      const f = (p.t - sP.t) / dt;
+      const predicted = sP.v + (eP.v - sP.v) * f;
+      const d = Math.abs(p.v - predicted);
+      if(d > maxDist){ maxDist = d; maxIdx = i; }
+    }
+    if(maxDist > eps && maxIdx > 0){
+      kept.push(maxIdx);
+      stack.push([s, maxIdx]);
+      stack.push([maxIdx, e]);
+    }
+  }
+  return kept.sort((a, b) => a - b);
+}
+
+// Build the initial anchor set from raw samples via adaptive RDP simplification.
+// Tightens the tolerance if it returns too few anchors and loosens it if too
+// many, aiming for a count that captures the move's character without
+// becoming unwieldy on long takes.
+function mocoBuildAnchors(p){
+  const trk = mocoTake && mocoTake.tracks ? mocoTake.tracks[p] : null;
+  if(!trk || trk.length < 2) return null;
+  const target = { min: 6, max: 40, aimMin: 8, aimMax: 30 };
+  let eps = 0.015;                              // 1.5% of slider range — sensible start
+  let idx = rdpIndices(trk, eps);
+  for(let tries = 0; tries < 6 && idx.length < target.aimMin && eps > 0.001; tries++){ eps *= 0.5; idx = rdpIndices(trk, eps); }
+  for(let tries = 0; tries < 6 && idx.length > target.aimMax; tries++){ eps *= 2; idx = rdpIndices(trk, eps); }
+  // Hard clamp — never below MIN_ANCHORS, never silly-many.
+  if(idx.length < target.min){
+    // Pad with uniform samples between existing anchors.
+    const need = target.min - idx.length;
+    for(let i = 0; i < need; i++) idx.push(Math.round((i + 1) * trk.length / (need + 1)));
+    idx = Array.from(new Set(idx)).sort((a, b) => a - b);
+  }
+  if(idx.length > target.max){
+    // Decimate evenly down to MAX_ANCHORS, always keeping endpoints.
+    const step = idx.length / target.max;
+    const kept = [];
+    for(let i = 0; i < target.max; i++) kept.push(idx[Math.min(idx.length - 1, Math.round(i * step))]);
+    kept[kept.length - 1] = idx[idx.length - 1];
+    idx = kept;
+  }
+  return idx.map(i => ({ t: trk[i].t, v: trk[i].v }));
+}
+// Linear interp of raw samples at time t — same algorithm as mocoEvalTrack
+// uses internally, but isolated so anchor generation doesn't depend on which
+// curve is currently selected for playback.
+function mocoEvalRaw(samples, t){
+  if(!samples || !samples.length) return null;
+  if(t <= samples[0].t) return samples[0].v;
+  if(t >= samples[samples.length-1].t) return samples[samples.length-1].v;
+  let lo = 0, hi = samples.length - 1;
+  while(hi - lo > 1){ const m = (lo + hi) >> 1; if(samples[m].t > t) hi = m; else lo = m; }
+  const a = samples[lo], b = samples[hi];
+  const f = (t - a.t) / (b.t - a.t);
+  return a.v + (b.v - a.v) * f;
+}
+// Catmull-Rom spline through the anchors, evaluated at time t. Tension 0.5.
+// Falls back to linear at the ends. Anchors must be time-sorted.
+function mocoEvalAnchors(anchors, t){
+  if(!anchors || !anchors.length) return null;
+  if(anchors.length === 1) return anchors[0].v;
+  if(t <= anchors[0].t) return anchors[0].v;
+  if(t >= anchors[anchors.length-1].t) return anchors[anchors.length-1].v;
+  let lo = 0, hi = anchors.length - 1;
+  while(hi - lo > 1){ const m = (lo + hi) >> 1; if(anchors[m].t > t) hi = m; else lo = m; }
+  const p1 = anchors[lo], p2 = anchors[hi];
+  const p0 = lo > 0 ? anchors[lo-1] : p1;
+  const p3 = hi < anchors.length-1 ? anchors[hi+1] : p2;
+  // Centripetal CR is more visually pleasing — but uniform is simplest and
+  // works fine for monotonic-time anchors. Standard CR basis with tension 0.5.
+  const u = (t - p1.t) / (p2.t - p1.t);
+  const u2 = u * u, u3 = u2 * u;
+  const c0 = -0.5*u3 +     u2 - 0.5*u;
+  const c1 =  1.5*u3 - 2.5*u2 +     1.0;
+  const c2 = -1.5*u3 + 2.0*u2 + 0.5*u;
+  const c3 =  0.5*u3 - 0.5*u2;
+  return p0.v*c0 + p1.v*c1 + p2.v*c2 + p3.v*c3;
+}
+
+// Per-track arming. Rule of thumb: an empty track is *always* R-armed (you
+// can't play back what hasn't been captured). Only once a track has data
+// does P become available, and the play/rec flags act as user overrides.
+// Mutual exclusion is enforced in the toggle handlers — P and R never lit
+// at the same time.
+function mocoIsTrackP(p){
+  if(!mocoHasData(p)) return false;            // no data → P always off, R wins
+  if(mocoTrackPlay[p] === false) return false;
+  if(mocoTrackRec[p]  === true)  return false; // R explicitly on (overdub) → P off
+  return true;                                  // has data, no opposing override → P on
+}
+function mocoIsTrackR(p){
+  if(mocoTrackRec[p] === true)  return true;   // explicit overdub
+  if(mocoTrackRec[p] === false) return false;  // explicitly muted
+  return !mocoIsTrackP(p);                      // default to the opposite of P
+}
+
+function mocoToggleP(p){
+  const want = !mocoIsTrackP(p);
+  mocoTrackPlay[p] = want;
+  if(want) mocoTrackRec[p] = false;          // P and R are mutually exclusive per row
+  localStorage.setItem('rexy_moco_track_play', JSON.stringify(mocoTrackPlay));
+  localStorage.setItem('rexy_moco_track_rec',  JSON.stringify(mocoTrackRec));
+  mocoRenderUI();
+}
+function mocoToggleR(p){
+  const want = !mocoIsTrackR(p);
+  mocoTrackRec[p] = want;
+  if(want){
+    // R wipes the rest — track will be re-captured live.
+    mocoTrackPlay[p] = false;
+    mocoTrackEdit[p] = false;
+    localStorage.setItem('rexy_moco_track_edit', JSON.stringify(mocoTrackEdit));
+  }
+  localStorage.setItem('rexy_moco_track_play', JSON.stringify(mocoTrackPlay));
+  localStorage.setItem('rexy_moco_track_rec',  JSON.stringify(mocoTrackRec));
+  mocoRenderUI();
+}
+
+// E button — engage anchor editing for a single track. Builds the anchor set
+// from raw samples on first activation, then keeps it for subsequent toggles.
+// P and E are NOT mutually exclusive: both lit means "play back the edited
+// curve". R clears E (and P) so the live re-capture starts clean.
+function mocoToggleE(p){
+  if(!mocoTake){ return; }
+  const trk = mocoTake.tracks && mocoTake.tracks[p];
+  if(!trk || trk.length < 2){
+    mocoSetStatus(`Edit needs recorded data on "${p}". Record first.`);
+    return;
+  }
+  const want = !mocoIsTrackE(p);
+  if(want){
+    // Lazy-create anchors on first activation. Persisted with the take.
+    if(!mocoTake.edits) mocoTake.edits = {};
+    if(!mocoTake.edits[p] || !mocoTake.edits[p].length){
+      mocoTake.edits[p] = mocoBuildAnchors(p);
+    }
+    mocoPersistTakes();
+  }
+  mocoTrackEdit[p] = want;
+  localStorage.setItem('rexy_moco_track_edit', JSON.stringify(mocoTrackEdit));
+  mocoRenderUI();
+  mocoCanvasDraw();
+}
+
+function mocoPersistTakes(){
+  try { localStorage.setItem('rexy_moco_takes',  JSON.stringify(mocoTakes)); } catch(e){}
+  localStorage.setItem('rexy_moco_active',      mocoActiveTakeId);
+  localStorage.setItem('rexy_moco_take_counter', String(mocoTakeCounter));
+}
+// Kept as alias so any older call site doesn't break — same effect.
+const mocoPersistTake = mocoPersistTakes;
+
+// Switch the active take. Updates mocoTake pointer, persists, and refreshes UI.
+function mocoSelectTake(id){
+  const t = mocoTakes.find(t => t.id === id);
+  if(!t) return;
+  if(mocoState !== 'idle') mocoStop();
+  mocoActiveTakeId = id;
+  mocoTake = t;
+  mocoPlayhead = 0;
+  mocoPlayStart = {};
+  // Reset the view window so the freshly-selected take fits the canvas.
+  mocoViewStartMs = 0;
+  mocoViewMs = (t.durationMs > 0) ? Math.max(t.durationMs, MOCO_VIEW_MIN_MS) : MOCO_VIEW_DEFAULT_MS;
+  mocoPersistTakes();
+  mocoSetStatus(`Switched to "${t.name}".`);
+  mocoRenderUI();
+}
+
+function mocoDuplicateTake(){
+  if(!mocoTake){ mocoSetStatus('No take to duplicate.'); return; }
+  if(mocoState !== 'idle') mocoStop();
+  const dup = JSON.parse(JSON.stringify(mocoTake));     // deep clone including all sample arrays
+  dup.id = 'take-' + Date.now();
+  dup.name = mocoTake.name + ' (copy)';
+  dup.createdAt = new Date().toISOString();
+  mocoTakes.push(dup);
+  mocoActiveTakeId = dup.id;
+  mocoTake = dup;
+  mocoPersistTakes();
+  mocoSetStatus(`Duplicated → "${dup.name}". Edit / overdub freely; the original is preserved.`);
+  mocoRenderUI();
+}
+
+// Wipe all MoCo state — every take, every per-track colour override, every
+// P/R arming flag. Keeps bindings, tunings, calibration etc untouched (those
+// live under different localStorage keys). A confirm dialog protects against
+// accidental clicks because this is non-reversible.
+function mocoHardReset(){
+  if(!confirm('Are you sure? This erases all MoCo takes and resets the colour bindings to their defaults.')) return;
+  if(mocoState !== 'idle') mocoStop();
+  // Clear in-memory state
+  mocoTakes = [];
+  mocoActiveTakeId = '';
+  mocoTake = null;
+  mocoTakeCounter = 1;
+  mocoTrackPlay = {};
+  mocoTrackRec  = {};
+  mocoTrackEdit = {};
+  mocoTrackColour = {};
+  mocoPlayhead = 0;
+  mocoPlayStart = {};
+  mocoViewStartMs = 0;
+  mocoViewMs = MOCO_VIEW_DEFAULT_MS;
+  // Clear persisted state
+  ['rexy_moco_takes','rexy_moco_take','rexy_moco_active','rexy_moco_take_counter',
+   'rexy_moco_track_play','rexy_moco_track_rec','rexy_moco_track_edit','rexy_moco_track_colour']
+    .forEach(k => localStorage.removeItem(k));
+  // Rebuild a fresh take so the panel isn't empty
+  mocoResolveActive();
+  mocoPersistTakes();
+  mocoSetStatus('MoCo reset — fresh take, default colours.');
+  mocoRenderUI();
+  mocoCanvasDraw();
+}
+
+// ── Take import / export (.rxmove) ─────────────────────────────────────
+// .rxmove is a JSON envelope: a header marking the format + the take itself.
+// We export the active take so users can collect specific moves into a
+// library; on import we add it as a new take so duplicates don't merge over
+// existing recordings.
+function mocoBuildExport(){
+  if(!mocoTake){ return null; }
+  // Snapshot the arming state for every param that has data in this take. The
+  // global mocoTrackPlay/Rec/Edit maps are per-param across the whole app, so
+  // we only capture entries relevant to this take's tracks — keeps the file
+  // small and avoids dragging unrelated arming into the import target.
+  const arming = { play: {}, rec: {}, edit: {} };
+  const tracks = mocoTake.tracks || {};
+  for(const p in tracks){
+    if(mocoTrackPlay[p] !== undefined) arming.play[p] = mocoTrackPlay[p];
+    if(mocoTrackRec[p]  !== undefined) arming.rec[p]  = mocoTrackRec[p];
+    if(mocoTrackEdit[p] !== undefined) arming.edit[p] = mocoTrackEdit[p];
+  }
+  return {
+    rexyMove: true,
+    version: 2,                                  // bumped: arming added in v2
+    exportedAt: new Date().toISOString(),
+    take: JSON.parse(JSON.stringify(mocoTake)),  // deep clone so storage isn't affected
+    arming
+  };
+}
+async function mocoExportTake(){
+  if(!mocoTake){ mocoSetStatus('Nothing to save — no active take.'); return; }
+  const payload = mocoBuildExport();
+  const data = JSON.stringify(payload, null, 2);
+  const safeName = (mocoTake.name || 'take').replace(/[^a-z0-9_\-]+/gi, '-').toLowerCase();
+  const filename = `rexy-${safeName}.rxmove`;
+  if(window.showSaveFilePicker){
+    try {
+      const h = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'Rexy MoCo take', accept: { 'application/json': ['.rxmove', '.json'] } }]
+      });
+      const w = await h.createWritable(); await w.write(data); await w.close();
+      mocoSetStatus(`Saved "${mocoTake.name}" → ${h.name}`);
+      logMsg('Take saved: ' + h.name);
+      return;
+    } catch (e) { if(e && e.name === 'AbortError') return; }
+  }
+  // Fallback: drop into Downloads
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  mocoSetStatus(`Saved "${mocoTake.name}" (Downloads).`);
+  logMsg('Take exported (Downloads): ' + filename);
+}
+function mocoImportTake(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const payload = JSON.parse(reader.result);
+      if(!payload || !payload.rexyMove || !payload.take){
+        mocoSetStatus('Load failed — not a Rexy MoCo file.');
+        logMsg('Take import failed — bad header: ' + file.name);
+        return;
+      }
+      const t = payload.take;
+      // Mint a fresh id so it doesn't collide with an existing take.
+      t.id = 'take-' + Date.now();
+      // Keep the original name but mark as imported so it's findable in the list.
+      t.name = (t.name || 'Imported take') + ' (imported)';
+      if(!t.tracks) t.tracks = {};
+      mocoTakes.push(t);
+      mocoActiveTakeId = t.id;
+      mocoTake = t;
+      mocoPlayhead = 0;
+      mocoViewStartMs = 0;
+      mocoViewMs = (t.durationMs > 0) ? Math.max(t.durationMs, MOCO_VIEW_MIN_MS) : MOCO_VIEW_DEFAULT_MS;
+      // Restore arming for this take's tracks (v2+ files only — v1 files just
+      // skip this block and use the default rules).
+      if(payload.arming){
+        const a = payload.arming;
+        if(a.play) for(const p in a.play) mocoTrackPlay[p] = a.play[p];
+        if(a.rec)  for(const p in a.rec)  mocoTrackRec[p]  = a.rec[p];
+        if(a.edit) for(const p in a.edit) mocoTrackEdit[p] = a.edit[p];
+        localStorage.setItem('rexy_moco_track_play', JSON.stringify(mocoTrackPlay));
+        localStorage.setItem('rexy_moco_track_rec',  JSON.stringify(mocoTrackRec));
+        localStorage.setItem('rexy_moco_track_edit', JSON.stringify(mocoTrackEdit));
+      }
+      mocoPersistTakes();
+      mocoSetStatus(`Loaded "${t.name}".`);
+      logMsg('Take loaded: ' + file.name);
+      mocoRenderUI();
+      mocoCanvasDraw();
+    } catch (e) {
+      mocoSetStatus('Load failed — file not valid JSON.');
+      logMsg('Take import failed: ' + (e && e.message));
+    }
+  };
+  reader.readAsText(file);
+}
+
+function mocoDeleteTake(){
+  if(!mocoTake){ return; }
+  if(mocoTakes.length <= 1){
+    // Last take — just clear it instead of leaving the array empty
+    if(!confirm(`Clear "${mocoTake.name}"? All samples will be wiped.`)) return;
+    const fresh = mocoFreshTake();
+    mocoTakes = [fresh];
+    mocoActiveTakeId = fresh.id;
+    mocoTake = fresh;
+    mocoPersistTakes();
+    mocoSetStatus('Cleared the take.');
+    mocoRenderUI();
+    return;
+  }
+  if(!confirm(`Delete "${mocoTake.name}"? This can't be undone.`)) return;
+  const oldName = mocoTake.name;
+  mocoTakes = mocoTakes.filter(t => t.id !== mocoActiveTakeId);
+  mocoActiveTakeId = mocoTakes[0].id;
+  mocoTake = mocoTakes[0];
+  mocoPersistTakes();
+  mocoSetStatus(`Deleted "${oldName}" — now on "${mocoTake.name}".`);
+  mocoRenderUI();
+}
+
+// ── Transport actions ────────────────────────────────────────────────────
+
+// Capture each P-armed track's current value as the relative-playback origin.
+// During playback we drive output = playStart[p] + (sample.v - track[0].v) so
+// the move plays out from wherever the slider/camera currently is, rather than
+// snapping the camera to the recorded starting position.
+function mocoCapturePlayStart(){
+  mocoPlayStart = {};
+  if(!mocoTake) return;
+  for(const p in mocoTake.tracks){
+    if(mocoIsTrackP(p)) mocoPlayStart[p] = paramVal[p];
+  }
+}
+
+function mocoRecord(){
+  const boundList = mocoBoundParams();
+  if(!boundList.length){
+    mocoSetStatus('Nothing to record — bind at least one wheel/key first.');
+    return;
+  }
+  if(!mocoTake) mocoTake = mocoFreshTake();
+  // Wipe existing samples for R-armed tracks (clean punch-in). P-armed tracks
+  // keep their data — they'll play back as overdub context during this REC.
+  const recList = boundList.filter(mocoIsTrackR);
+  if(!recList.length && !boundList.some(mocoIsTrackP)){
+    mocoSetStatus('Nothing armed — set at least one track to R (or P for playback context).');
+    return;
+  }
+  for(const p of recList) mocoTake.tracks[p] = [];
+  // Lock the arming in for the duration of this REC pass. Without this, the
+  // default "R if empty / P if has data" rule kicks in the moment we push
+  // the first sample (track is no longer empty → flips to P → no further
+  // samples captured for the rest of the take).
+  for(const p of recList){ mocoTrackRec[p] = true; mocoTrackPlay[p] = false; }
+  localStorage.setItem('rexy_moco_track_rec',  JSON.stringify(mocoTrackRec));
+  localStorage.setItem('rexy_moco_track_play', JSON.stringify(mocoTrackPlay));
+  mocoCapturePlayStart();                    // P-armed tracks play relative from here
+  mocoStartT = performance.now();
+  mocoState = 'recording';
+  if(recList.length && boundList.some(mocoIsTrackP)){
+    mocoSetStatus(`Recording — ${recList.length} track(s) capturing, others playing back.`);
+  } else if(recList.length){
+    mocoSetStatus(`Recording ${recList.length} track(s).`);
+  } else {
+    mocoSetStatus('Recording — P-only pass (no new capture). Tap STOP when done.');
+  }
+  mocoRenderUI();
+}
+
+function mocoStop(){
+  if(mocoState === 'recording'){
+    // Finalise duration. Take the max across the tracks that were captured this pass.
+    let maxT = mocoTake.durationMs || 0;
+    for(const p in mocoTake.tracks){
+      const trk = mocoTake.tracks[p];
+      if(trk.length) maxT = Math.max(maxT, trk[trk.length-1].t);
+    }
+    mocoTake.durationMs = maxT;
+    mocoPersistTake();
+    mocoSetStatus(`Stopped — ${(maxT/1000).toFixed(2)}s total.`);
+    // After a successful record, auto-arm P on the tracks that just captured.
+    // Avoids the user having to manually flip every track to P before pressing Play.
+    for(const p in mocoTake.tracks){
+      if(mocoTake.tracks[p].length){
+        mocoTrackPlay[p] = true;
+        mocoTrackRec[p]  = false;
+      }
+    }
+    localStorage.setItem('rexy_moco_track_play', JSON.stringify(mocoTrackPlay));
+    localStorage.setItem('rexy_moco_track_rec',  JSON.stringify(mocoTrackRec));
+  } else if(mocoState === 'playing'){
+    mocoSetStatus(`Playback stopped at ${(mocoPlayhead/1000).toFixed(2)}s.`);
+  }
+  mocoState = 'idle';
+  mocoPlayhead = 0;
+  mocoPlayStart = {};
+  mocoRenderUI();
+}
+
+function mocoPlay(){
+  if(!mocoTake || !mocoTake.durationMs){
+    mocoSetStatus('Nothing to play — record something first.');
+    return;
+  }
+  mocoCapturePlayStart();                    // relative playback: capture current positions
+  mocoStartT = performance.now() - mocoPlayhead;     // resume from current playhead
+  mocoState = 'playing';
+  mocoSetStatus('Playing P-armed tracks relative from current positions.');
+  mocoRenderUI();
+}
+
+function mocoRewind(){
+  mocoPlayhead = 0;
+  if(mocoState === 'playing') mocoStartT = performance.now();
+  mocoUpdateTime();
+  mocoSetStatus('Rewound to start.');
+}
+
+// Snap P-armed tracks to their recorded starting values. Use this when you
+// want the camera to be in the exact state at which the take was recorded —
+// then press Play to get a verbatim "absolute" playback (because relative + 0
+// offset = absolute).
+function mocoHome(){
+  if(!mocoTake){ mocoSetStatus('No take to home to.'); return; }
+  // Stop any in-progress playback first so the tick doesn't immediately
+  // shove the playhead forward again.
+  if(mocoState === 'playing') mocoStop();
+  let count = 0;
+  for(const p in mocoTake.tracks){
+    if(!mocoIsTrackP(p)) continue;
+    const trk = mocoTake.tracks[p];
+    if(trk && trk.length){
+      setParam(p, trk[0].v);
+      count++;
+    }
+  }
+  // Send the playhead back to t=0 and slide the view to match, so the user
+  // is visually at the top of the take and ready to play.
+  mocoPlayhead = 0;
+  mocoViewStartMs = 0;
+  mocoUpdateTime();
+  mocoUpdateZoomUI();
+  mocoCanvasDraw();
+  mocoSetStatus(count ? `Homed ${count} track(s) to recorded start.` : 'Playhead at start.');
+}
+
+function mocoNewTake(){
+  if(mocoState !== 'idle') mocoStop();
+  const t = mocoFreshTake();
+  mocoTakes.push(t);
+  mocoActiveTakeId = t.id;
+  mocoTake = t;
+  mocoPlayhead = 0;
+  // Fresh take = everything armed for record. Clear stale per-track P/R/E
+  // overrides so the bindings list defaults to "R if empty" → all R.
+  mocoTrackPlay = {};
+  mocoTrackRec  = {};
+  mocoTrackEdit = {};
+  localStorage.setItem('rexy_moco_track_play', JSON.stringify(mocoTrackPlay));
+  localStorage.setItem('rexy_moco_track_rec',  JSON.stringify(mocoTrackRec));
+  localStorage.setItem('rexy_moco_track_edit', JSON.stringify(mocoTrackEdit));
+  // Reset zoom/scroll for the new (empty) take.
+  mocoViewStartMs = 0;
+  mocoViewMs = MOCO_VIEW_DEFAULT_MS;
+  mocoPersistTakes();
+  mocoSetStatus(`Created "${t.name}". All tracks armed for record.`);
+  mocoRenderUI();
+}
+
+function mocoRenameTake(){
+  if(!mocoTake){ mocoSetStatus('No take to rename.'); return; }
+  const name = prompt('Take name:', mocoTake.name);
+  if(name && name.trim()){
+    mocoTake.name = name.trim();
+    mocoPersistTake();
+    mocoRenderUI();
+  }
+}
+
+// ── Per-frame tick (called from inputLoop) ───────────────────────────────
+
+// Drive a single P-armed track at time t using relative-from-current playback.
+// playStart is the slider value at the moment Play (or Rec) was pressed, so
+// the move plays as a delta from there instead of snapping to the recorded
+// absolute value.
+function mocoDriveTrackRelative(p, t){
+  const trk = mocoTake.tracks[p]; if(!trk || !trk.length) return;
+  // If E is on for this track, evaluate the edited spline; otherwise replay
+  // the raw samples. The relative-from-current delta is computed against the
+  // *active curve's* start, so the move plays naturally either way.
+  const useEdit = mocoIsTrackE(p);
+  const anchors = useEdit ? mocoEditAnchors(p) : null;
+  let v0, evald;
+  if(useEdit && anchors && anchors.length){
+    v0 = anchors[0].v;
+    evald = mocoEvalAnchors(anchors, t);
+  } else {
+    v0 = trk[0].v;
+    evald = mocoEvalTrack(trk, t);
+  }
+  if(evald == null) return;
+  const start = (mocoPlayStart[p] != null) ? mocoPlayStart[p] : v0;
+  const delta = evald - v0;
+  setParam(p, Math.max(0, Math.min(1, start + delta)));
+}
+
+function mocoTick(){
+  // Always redraw if the canvas is visible — cheap, keeps playhead smooth.
+  // Skip when idle and playhead hasn't moved to avoid pointless redraws.
+  const needRedraw = (mocoState !== 'idle') || mocoScrubbing;
+  if(mocoState === 'recording'){
+    const t = performance.now() - mocoStartT;
+    // R-armed tracks capture from live paramVal. P-armed tracks drive the slider
+    // from samples (relative) as playback context. They're mutually exclusive
+    // per row, so a given param does one or the other, not both.
+    for(const p of mocoBoundParams()){
+      if(mocoIsTrackR(p)){
+        const trk = mocoTake.tracks[p] || (mocoTake.tracks[p] = []);
+        trk.push({ t: t, v: paramVal[p] });
+      } else if(mocoIsTrackP(p) && mocoTake.tracks[p] && mocoTake.tracks[p].length){
+        mocoDriveTrackRelative(p, t);
+      }
+    }
+    mocoPlayhead = t;
+    mocoUpdateTime();
+  } else if(mocoState === 'playing'){
+    const t = performance.now() - mocoStartT;
+    if(mocoTake && t >= mocoTake.durationMs){
+      // End of take — drive each P-armed track to its final value, then stop.
+      // For E-on tracks we use the last anchor; otherwise the last raw sample.
+      for(const p in mocoTake.tracks){
+        if(!mocoIsTrackP(p)) continue;
+        const trk = mocoTake.tracks[p];
+        if(trk && trk.length){
+          const useEdit = mocoIsTrackE(p);
+          const anchors = useEdit ? mocoEditAnchors(p) : null;
+          const v0   = (useEdit && anchors && anchors.length) ? anchors[0].v             : trk[0].v;
+          const vEnd = (useEdit && anchors && anchors.length) ? anchors[anchors.length-1].v : trk[trk.length-1].v;
+          const start = (mocoPlayStart[p] != null) ? mocoPlayStart[p] : v0;
+          setParam(p, Math.max(0, Math.min(1, start + (vEnd - v0))));
+        }
+      }
+      mocoStop();
+      return;
+    }
+    for(const p in mocoTake.tracks){
+      if(!mocoIsTrackP(p)) continue;
+      mocoDriveTrackRelative(p, t);
+    }
+    mocoPlayhead = t;
+    mocoUpdateTime();
+  }
+  if(needRedraw){
+    // Auto-scroll so the playhead always stays in view when zoomed in.
+    if(mocoState === 'recording' || mocoState === 'playing') mocoFollowPlayhead();
+    mocoUpdateZoomUI();
+    mocoCanvasDraw();
+  }
+}
+
+// Linear interp between adjacent samples. Binary search keeps it cheap for big takes.
+function mocoEvalTrack(samples, t){
+  if(!samples || !samples.length) return null;
+  if(t <= samples[0].t) return samples[0].v;
+  if(t >= samples[samples.length-1].t) return samples[samples.length-1].v;
+  // Binary search for first sample > t
+  let lo = 0, hi = samples.length - 1;
+  while(lo < hi - 1){
+    const mid = (lo + hi) >> 1;
+    if(samples[mid].t <= t) lo = mid; else hi = mid;
+  }
+  const a = samples[lo], b = samples[hi];
+  const f = (t - a.t) / Math.max(0.0001, b.t - a.t);
+  return a.v + (b.v - a.v) * f;
+}
+
+// ── UI rendering ─────────────────────────────────────────────────────────
+
+function mocoFormatTime(ms){
+  const total = Math.max(0, ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total - m * 60;
+  return `${String(m).padStart(2,'0')}:${s.toFixed(2).padStart(5,'0')}`;
+}
+
+function mocoUpdateTime(){
+  const el = document.getElementById('moco-time');
+  if(el) el.textContent = mocoFormatTime(mocoPlayhead);
+  const dur = document.getElementById('moco-duration');
+  if(dur) dur.textContent = '/ ' + (mocoTake && mocoTake.durationMs ? mocoFormatTime(mocoTake.durationMs) : '—');
+}
+
+function mocoSetStatus(text){
+  const el = document.getElementById('moco-status');
+  if(el) el.textContent = text;
+}
+
+function mocoRenderUI(){
+  // Make sure mocoTake pointer is valid for the current active id
+  mocoResolveActive();
+  // Take selector — populated with all takes, current one selected
+  const takeSel = document.getElementById('moco-take-select');
+  if(takeSel){
+    takeSel.innerHTML = mocoTakes.map(t => {
+      const dur = t.durationMs ? `${(t.durationMs/1000).toFixed(1)}s` : 'empty';
+      const isActive = (t.id === mocoActiveTakeId) ? ' selected' : '';
+      return `<option value="${t.id}"${isActive}>${t.name} (${dur})</option>`;
+    }).join('');
+  }
+
+  // Transport button states
+  const recBtn  = document.getElementById('moco-rec');
+  const playBtn = document.getElementById('moco-play');
+  const stopBtn = document.getElementById('moco-stop');
+  if(recBtn)  recBtn.classList.toggle('active',  mocoState === 'recording');
+  if(playBtn) playBtn.classList.toggle('active', mocoState === 'playing');
+  if(recBtn)  recBtn.disabled  = mocoState === 'playing';
+  if(playBtn) playBtn.disabled = mocoState === 'recording' || !(mocoTake && mocoTake.durationMs);
+  if(stopBtn) stopBtn.disabled = mocoState === 'idle';
+
+  mocoUpdateTime();
+
+  // Tracks list
+  const wrap = document.getElementById('moco-tracks'); if(!wrap) return;
+  const boundList = mocoBoundParams();
+  if(!boundList.length){
+    wrap.innerHTML = '<div class="moco-no-tracks">No bound params yet. Bind a wheel, stick, or key on any card above to make it recordable.</div>';
+    return;
+  }
+  wrap.innerHTML = boundList.map(p => {
+    const pOn   = mocoIsTrackP(p);
+    const rOn   = mocoIsTrackR(p);
+    const trk     = mocoTake && mocoTake.tracks ? mocoTake.tracks[p] : null;
+    const hasData = !!(trk && trk.length);
+    const meta    = hasData ? `${(trk[trk.length-1].t/1000).toFixed(2)}s · ${trk.length} pts` : '—';
+    const cls     = ['moco-track'];
+    if(hasData) cls.push('has-data');
+    if(mocoState === 'recording' && rOn) cls.push('recording');
+    if((mocoState === 'recording' || mocoState === 'playing') && pOn && hasData) cls.push('playing');
+    const eOn = mocoIsTrackE(p);
+    return `<div class="${cls.join(' ')}">
+      <span class="mt-arm">
+        <button class="arm-p ${pOn?'on':''}" onclick="mocoToggleP('${p}')" title="Arm to play back from recorded data">P</button>
+        <button class="arm-r ${rOn?'on':''}" onclick="mocoToggleR('${p}')" title="Arm to record live input">R</button>
+        <button class="arm-e ${eOn?'on':''}" ${hasData?'':'disabled'} onclick="mocoToggleE('${p}')" title="Edit — drag the anchor dots on the timeline to reshape the curve. Needs recorded data first.">E</button>
+      </span>
+      <span class="mt-dot" style="background:${mocoColour(p)}" onclick="event.stopPropagation(); mocoShowColourPicker('${p}', this)" title="Click to choose colour"></span>
+      <span class="mt-name">${p}</span>
+      <span class="mt-meta">${meta}</span>
+    </div>`;
+  }).join('');
+  mocoCanvasDraw();
+}
+
+// Re-render tracks list whenever bindings change. Hook into the existing
+// persistence path so it fires after Bind / Clear / Camera switch.
+const _moco_origPersist = persistBindings;
+persistBindings = function(){
+  _moco_origPersist.apply(this, arguments);
+  mocoRenderUI();
+};
+
+// Initial render at boot (after the DOM is ready — script runs at end of body).
+mocoResolveActive();             // ensure mocoTake pointer is valid (creates a fresh take if needed)
+mocoCanvasInit();
+mocoRenderUI();
 
 // ── Config: save / export / import the whole setup (bindings + connection + gear) ──
 function gv(id){ const e=document.getElementById(id); return e?e.value:undefined; }

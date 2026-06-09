@@ -4,6 +4,12 @@ Virtual production camera control for Unreal Engine 5. Drive Cine Camera Actors 
 
 ![Rexy Bridge app](docs/screenshots/app-header.png)
 
+> ### v2.0 beta is here — Virtual MoCo
+>
+> The **`v2-beta`** branch adds a full **Virtual Motion Control** system: record live performances of every bound parameter at 60Hz, multi-take management, a colour-coded timeline with playhead and zoom, bezier-lite curve editing per track, and `.rxmove` file save/load. The bridge and hardware support are unchanged from v1.0 — everything new lives in the browser app.
+>
+> See the [v2.0.0-beta.1 release](https://github.com/RexyGaming/rexy-bridge/releases/tag/v2.0.0-beta.1) for the download, or `git checkout v2-beta` if you're cloning. Stable v1.0 stays on `main`. Bug reports welcome via Issues — please tag with `v2-beta`.
+
 ## What it does
 
 - **Live camera head control** — pan, tilt, roll with a real fluid-head feel (response curve, sensitivity, deadband, feather per axis)
