@@ -68,6 +68,10 @@ def parse_args():
                    help="LEGACY: auto-drive /rexy/pan and /rexy/tilt from the selected joystick's "
                         "--pan-axis / --tilt-axis. OFF by default — bind wheels in the app's Bind UI "
                         "instead, which uses the browser Gamepad API and supports multiple devices.")
+    p.add_argument("--ue-startup-grace", default=10.0, type=float,
+                   help="Seconds the bridge will quietly wait for UE to finish loading the project "
+                        "before declaring RC offline to the app. Reduces 'red dot' panic during a "
+                        "fresh editor launch. (default: 10.0)")
     return p.parse_args()
 
 
@@ -180,6 +184,12 @@ async def _ws_server(args):
                     "device_name": state.device_name,
                 }
             await websocket.send(json.dumps(snap))
+            # Send current discovery state so the UI shows "waiting…" / "ready"
+            # immediately on connect instead of silent until next probe.
+            if ue5_rc:
+                await websocket.send(json.dumps({"type": "discovery_status",
+                                                 "state": ue5_rc.get_discovery_state(),
+                                                 "cameras": ue5_rc._discovery_camera_count}))
             # Send discovered RC field names so app can populate picker
             if ue5_rc:
                 fields_msg = json.dumps({"type": "rc_fields", "fields": ue5_rc.get_rc_fields()})
@@ -249,6 +259,40 @@ async def _ws_server(args):
                                 try: await ws.send(json.dumps({"type": "cameras", "cameras": cams}))
                                 except Exception: pass
                             asyncio.ensure_future(_lc(websocket))
+
+                    elif msg_type == "auto_scan":
+                        # User clicked "Scan UE" — discover cameras + cranes via
+                        # actor-search, pair cameras to their parent cranes, and
+                        # send a structured summary back to the app for confirmation.
+                        if ue5_rc:
+                            async def _scan(ws):
+                                result = await ue5_rc.auto_scan_level(verbose=args.verbose)
+                                try: await ws.send(json.dumps({"type": "auto_scan_result",
+                                                               "result": result}))
+                                except Exception: pass
+                            asyncio.ensure_future(_scan(websocket))
+
+                    elif msg_type == "apply_scan":
+                        # User confirmed the scan and (optionally) wants it saved
+                        # to mappings.json so the next bridge launch starts pre-mapped.
+                        save_to_disk = bool(data.get("save", False))
+                        if ue5_rc:
+                            async def _apply(ws):
+                                saved_path = None
+                                if save_to_disk:
+                                    try:
+                                        saved_path = ue5_rc.save_mappings_with_backup(
+                                            os.path.dirname(os.path.abspath(__file__)))
+                                    except Exception as e:
+                                        print(f"  apply_scan: save failed — {e}")
+                                # Refresh the camera list so the app's picker repaints.
+                                cams = await ue5_rc.list_cameras(verbose=args.verbose)
+                                try: await ws.send(json.dumps({"type": "apply_scan_result",
+                                                               "saved": bool(saved_path),
+                                                               "savedPath": saved_path,
+                                                               "cameras": cams}))
+                                except Exception: pass
+                            asyncio.ensure_future(_apply(websocket))
 
                     elif msg_type == "set_camera":
                         p = data.get("path")
@@ -411,6 +455,11 @@ async def _ws_server(args):
         ue5_rc = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(ue5_rc)
         rc_mapping = ue5_rc.load_mappings(script_dir)
+        # Wire the discovery-state machine so transitions push to the app's
+        # status UI. state.broadcast() is thread-safe (uses call_soon_threadsafe).
+        ue5_rc.register_discovery_broadcaster(state.broadcast)
+        ue5_rc.set_discovery_state("waiting", camera_count=0,
+                                   note=f"Bridge online. Waiting for UE (grace {args.ue_startup_grace:.0f}s).")
     except Exception as e:
         print(f"  UE5 RC: could not load ue5_rc_listener.py — {e}")
         ue5_rc     = None

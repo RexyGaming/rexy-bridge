@@ -63,6 +63,14 @@
   .moco-btn.small{font-size:.55rem;padding:5px 8px;letter-spacing:.08em}
   .moco-btn.moco-reset{color:#ff8888;border-color:#5a2828}
   .moco-btn.moco-reset:hover{background:rgba(255,90,90,.15);color:#ff5a48}
+  .moco-bake{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;user-select:none;padding:0 4px}
+  .moco-bake input{margin:0;cursor:pointer}
+  .moco-bake:hover{color:var(--text)}
+  .moco-bake input:checked + span{color:var(--gold)}
+  .moco-countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:6rem;font-weight:700;color:var(--gold);text-shadow:0 4px 24px rgba(0,0,0,.7);pointer-events:none;z-index:50;opacity:0;transition:opacity .15s ease}
+  .moco-countdown.show{opacity:1}
+  .moco-countdown.go{color:#22c55e;font-size:5rem}
+  .moco-timeline{position:relative}
   .moco-status{font-size:.62rem;color:var(--faint);font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
   .moco-take-select{background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'Inter';font-size:.66rem;padding:3px 8px;border-radius:5px;outline:none;cursor:pointer;min-width:140px;max-width:260px}
   .moco-take-select:focus{border-color:var(--blue)}
@@ -167,6 +175,18 @@
   .tunerow input{flex:1;width:0;min-width:0;background:#0d1219;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:2px 5px;border-radius:4px;outline:none}
   .grid.disabled{opacity:.35;pointer-events:none}
   .cam-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .scan-panel{margin:12px 0;padding:14px;background:#0d1219;border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;gap:10px}
+  .scan-head{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--border-soft);padding-bottom:6px}
+  .scan-title{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text)}
+  .scan-method{font-size:.6rem;color:var(--faint);font-family:'JetBrains Mono',monospace}
+  .scan-body{font-size:.7rem;color:var(--text);line-height:1.6}
+  .scan-body .scan-section{margin:8px 0;padding:6px 10px;background:rgba(255,255,255,.02);border-left:2px solid var(--gold);border-radius:0 4px 4px 0}
+  .scan-body .scan-section.cranes{border-left-color:var(--blue)}
+  .scan-body .scan-row{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+  .scan-body .scan-row .scan-name{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text)}
+  .scan-body .scan-row .scan-meta{font-size:.6rem;color:var(--faint)}
+  .scan-body .scan-empty{color:var(--muted);font-style:italic}
+  .scan-actions{display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border-soft);padding-top:8px}
   .cam-pill{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border-soft);border-radius:8px;overflow:hidden}
   .cam-btn{background:transparent;border:none;color:var(--text);font-family:'Inter';font-size:.78rem;padding:7px 13px;cursor:pointer}
   .cam-btn.active{color:var(--blue);background:rgba(79,143,203,.12)}
@@ -256,7 +276,22 @@
   <div class="config" style="gap:14px;align-items:center">
     <div class="field" style="flex:1;max-width:340px"><label>Active camera</label>
       <div id="cam-row" class="cam-row"><span style="color:var(--muted);font-size:.7rem">— connect to scan —</span></div></div>
-    <button class="bindbtn" style="float:none;align-self:center" onclick="scanCameras()">Rescan</button>
+    <button class="bindbtn" style="float:none;align-self:center" onclick="scanCameras()" title="Refresh the camera list from the current discovery state (preset or auto-scan)">Rescan</button>
+    <button class="bindbtn" style="float:none;align-self:center" onclick="autoScanUE()" title="Scan UE for CineCameraActors and CameraRig_Crane actors automatically — no RexyControl preset required">⌕ Scan UE</button>
+  </div>
+
+  <!-- Auto-scan confirmation panel — populated by autoScanUE() result. Hidden by default. -->
+  <div id="scan-panel" class="scan-panel" style="display:none">
+    <div class="scan-head">
+      <span class="scan-title">Auto-scan result</span>
+      <span class="scan-method" id="scan-method"></span>
+    </div>
+    <div class="scan-body" id="scan-body"></div>
+    <div class="scan-actions">
+      <button class="bindbtn" onclick="applyScanResult(false)" title="Use these mappings for this session — won't survive a bridge restart">Apply (session)</button>
+      <button class="bindbtn" onclick="applyScanResult(true)"  title="Use these mappings AND save to mappings.json (with timestamped backup)">Apply + Save</button>
+      <button class="bindbtn" onclick="closeScanPanel()">Cancel</button>
+    </div>
   </div>
 
   <!-- WHEELS -->
@@ -389,6 +424,10 @@
       <button class="moco-btn rec"   id="moco-rec"     onclick="mocoRecord()"     title="Start recording the ticked tracks">● REC</button>
       <button class="moco-btn stop"  id="moco-stop"    onclick="mocoStop()"       title="Stop recording or playback">■ STOP</button>
       <button class="moco-btn play"  id="moco-play"    onclick="mocoPlay()"       title="Play back the current take">▶ PLAY</button>
+      <label class="moco-bake" title="Bake mode: 3-2-1 countdown on REC/PLAY + held tail, to sync with UE Take Recorder. Arm Take Recorder, then hit Rexy REC or PLAY — countdown gives you 3s to hit TR's record button before the move starts.">
+        <input type="checkbox" id="moco-bake" onchange="mocoSetBakeMode(this.checked)">
+        <span>Bake</span>
+      </label>
       <button class="moco-btn small" id="moco-rewind"  onclick="mocoRewind()"     title="Jump playhead to start">⏮</button>
       <button class="moco-btn small" id="moco-home"    onclick="mocoHome()"       title="Snap P-armed tracks to their recorded starting values">⌂ HOME</button>
       <span style="flex:1"></span>
@@ -400,6 +439,7 @@
     <div class="moco-status" id="moco-status">Idle — bind something, then press REC.</div>
     <div class="moco-timeline">
       <canvas id="moco-canvas" title="Click to seek · drag to scrub · wheel to zoom"></canvas>
+      <div class="moco-countdown" id="moco-countdown"></div>
       <div class="moco-zoom-row">
         <button class="moco-btn small" onclick="mocoZoom(0.5)"  title="Zoom out (show more time)">−</button>
         <button class="moco-btn small" onclick="mocoZoom(2.0)"  title="Zoom in (show less time)">+</button>
@@ -1039,6 +1079,95 @@ function mocoPlayPauseToggle(){
   if(mocoState === 'playing' || mocoState === 'recording') mocoStop();
   else mocoPlay();
 }
+
+// ── Bake mode (sync with UE Take Recorder) ──────────────────────────────
+// When on, REC and PLAY fire a 3-2-1 countdown with audible beeps so the
+// user can hit Take Recorder's record button in sync. Also adds a 1s
+// held-frame tail at the end of playback so Take Recorder captures a clean
+// trim point. No UE-side changes required — the user arms TR manually.
+let mocoBakeMode = false;
+let mocoCountdownActive = false;       // true while the 3-2-1 is running; STOP cancels it
+let mocoBakeTailUntil = 0;             // wallclock ms for end-of-play held-frame tail
+try { mocoBakeMode = localStorage.getItem('rexy_moco_bake') === '1'; } catch(e){}
+function mocoSetBakeMode(on){
+  mocoBakeMode = !!on;
+  try { localStorage.setItem('rexy_moco_bake', mocoBakeMode ? '1' : '0'); } catch(e){}
+  const cb = document.getElementById('moco-bake'); if(cb) cb.checked = mocoBakeMode;
+  mocoSetStatus(mocoBakeMode
+    ? 'Bake mode on — REC/PLAY will count down 3-2-1 so you can sync UE Take Recorder.'
+    : 'Bake mode off.');
+}
+
+// Web Audio click for countdown beeps. Lazily-initialised AudioContext so
+// browsers don't grumble about no-user-gesture. The mocoSetBakeMode click
+// itself counts as the gesture.
+let _mocoAudioCtx = null;
+function mocoBeep(freq, ms){
+  try {
+    if(!_mocoAudioCtx) _mocoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _mocoAudioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + ms/1000);
+    osc.start(t0);
+    osc.stop(t0 + ms/1000 + 0.02);
+  } catch(e){ /* audio unavailable — silent countdown is fine */ }
+}
+
+function mocoShowCountdown(label, isGo){
+  const el = document.getElementById('moco-countdown');
+  if(!el) return;
+  el.textContent = label;
+  el.classList.toggle('go', !!isGo);
+  el.classList.add('show');
+}
+function mocoHideCountdown(){
+  const el = document.getElementById('moco-countdown');
+  if(!el) return;
+  el.classList.remove('show', 'go');
+}
+
+// Run the 3-2-1-GO sequence. Resolves true if it completed, false if STOP
+// (or another transport action) interrupted it. Cancellation flag is set
+// by mocoStop().
+function mocoCountdown(){
+  return new Promise(resolve => {
+    mocoCountdownActive = true;
+    let n = 3;
+    mocoShowCountdown(String(n), false);
+    mocoBeep(660, 120);
+    const tick = () => {
+      if(!mocoCountdownActive){ mocoHideCountdown(); resolve(false); return; }
+      n--;
+      if(n > 0){
+        mocoShowCountdown(String(n), false);
+        mocoBeep(660, 120);
+        setTimeout(tick, 1000);
+      } else {
+        mocoShowCountdown('GO', true);
+        mocoBeep(880, 240);
+        setTimeout(() => {
+          mocoHideCountdown();
+          mocoCountdownActive = false;
+          resolve(true);
+        }, 350);
+      }
+    };
+    setTimeout(tick, 1000);
+  });
+}
+function mocoCancelCountdown(){
+  if(mocoCountdownActive){
+    mocoCountdownActive = false;
+    mocoHideCountdown();
+  }
+}
 const FUNCTION_ACTIONS = {
   autolevel: triggerAutolevel,
   mocoRec:   () => mocoRecord(),
@@ -1087,6 +1216,76 @@ function setGripMode(mode){
 // ── Multiple cameras — discover + select ─────────────────────────────────────
 function scanCameras(){
   if(socket&&socket.readyState===WebSocket.OPEN) socket.send(JSON.stringify({type:'list_cameras'}));
+}
+
+// Auto-scan UE for CineCameraActors + CameraRig_Cranes via actor-search. No
+// per-project preset required. Bridge replies with {type:'auto_scan_result'}
+// which paints the confirmation panel below the camera row.
+let _lastScanResult = null;
+function autoScanUE(){
+  if(!(socket && socket.readyState===WebSocket.OPEN)){
+    logMsg('Auto-scan: WS not connected.');
+    return;
+  }
+  const panel = document.getElementById('scan-panel');
+  const body  = document.getElementById('scan-body');
+  const meth  = document.getElementById('scan-method');
+  if(panel) panel.style.display = 'flex';
+  if(body) body.innerHTML = '<div class="scan-empty">Scanning UE level…</div>';
+  if(meth) meth.textContent = '';
+  socket.send(JSON.stringify({type:'auto_scan'}));
+}
+
+function renderScanResult(r){
+  _lastScanResult = r;
+  const body = document.getElementById('scan-body');
+  const meth = document.getElementById('scan-method');
+  if(!body) return;
+  const cams   = (r && r.cameras) || [];
+  const cranes = (r && r.cranes)  || [];
+  const method = (r && r.method)  || 'none';
+  if(meth) meth.textContent = method === 'search'
+    ? 'method: actor-search (no preset needed)'
+    : method === 'preset'
+      ? 'method: RexyControl preset (fallback)'
+      : 'method: no cameras found';
+  const html = [];
+  html.push(`<div class="scan-section"><div class="scan-row"><b>Cameras (${cams.length})</b></div>`);
+  if(!cams.length){
+    html.push('<div class="scan-empty">No CineCameraActors detected. Drop one in the level and rescan.</div>');
+  } else {
+    for(const c of cams){
+      const craneInfo = c.crane_name
+        ? `on <span class="scan-name">${c.crane_name}</span>`
+        : '<span class="scan-meta">free (not on a crane)</span>';
+      html.push(`<div class="scan-row"><span class="scan-name">${c.name}</span><span class="scan-meta">${craneInfo}</span></div>`);
+    }
+  }
+  html.push('</div>');
+  html.push(`<div class="scan-section cranes"><div class="scan-row"><b>Cranes (${cranes.length})</b></div>`);
+  if(!cranes.length){
+    html.push('<div class="scan-empty">No CameraRig_Crane actors in this level.</div>');
+  } else {
+    for(const c of cranes){
+      html.push(`<div class="scan-row"><span class="scan-name">${c.name}</span><span class="scan-meta">grip rig</span></div>`);
+    }
+  }
+  html.push('</div>');
+  body.innerHTML = html.join('');
+}
+
+function applyScanResult(saveToDisk){
+  if(!_lastScanResult){ logMsg('Auto-scan: nothing to apply.'); return; }
+  if(!(socket && socket.readyState===WebSocket.OPEN)) return;
+  socket.send(JSON.stringify({type:'apply_scan', save: !!saveToDisk}));
+  // Optimistic UI: close the panel; the apply_scan_result handler logs the
+  // final outcome (saved or session-only) and refreshes the camera list.
+  closeScanPanel();
+}
+
+function closeScanPanel(){
+  const panel = document.getElementById('scan-panel');
+  if(panel) panel.style.display = 'none';
 }
 function setCamera(path){
   if(!path||!socket||socket.readyState!==WebSocket.OPEN) return;
@@ -2640,7 +2839,8 @@ function mocoCapturePlayStart(){
   }
 }
 
-function mocoRecord(){
+async function mocoRecord(){
+  if(mocoCountdownActive || mocoState === 'recording') return;
   const boundList = mocoBoundParams();
   if(!boundList.length){
     mocoSetStatus('Nothing to record — bind at least one wheel/key first.');
@@ -2653,6 +2853,13 @@ function mocoRecord(){
   if(!recList.length && !boundList.some(mocoIsTrackP)){
     mocoSetStatus('Nothing armed — set at least one track to R (or P for playback context).');
     return;
+  }
+  // Bake mode — 3-2-1 countdown so the user can hit UE Take Recorder's
+  // record button in sync. STOP during the countdown cancels.
+  if(mocoBakeMode){
+    mocoSetStatus('Bake REC — counting down. Arm Take Recorder now.');
+    const ok = await mocoCountdown();
+    if(!ok){ mocoSetStatus('Bake REC cancelled.'); return; }
   }
   for(const p of recList) mocoTake.tracks[p] = [];
   // Lock the arming in for the duration of this REC pass. Without this, the
@@ -2676,6 +2883,9 @@ function mocoRecord(){
 }
 
 function mocoStop(){
+  // Cancel any in-flight bake countdown — STOP during 3-2-1 aborts the take.
+  if(mocoCountdownActive){ mocoCancelCountdown(); }
+  mocoBakeTailUntil = 0;                   // bail out of any held tail
   if(mocoState === 'recording'){
     // Finalise duration. Take the max across the tracks that were captured this pass.
     let maxT = mocoTake.durationMs || 0;
@@ -2705,15 +2915,23 @@ function mocoStop(){
   mocoRenderUI();
 }
 
-function mocoPlay(){
+async function mocoPlay(){
+  if(mocoCountdownActive || mocoState === 'playing') return;
   if(!mocoTake || !mocoTake.durationMs){
     mocoSetStatus('Nothing to play — record something first.');
     return;
   }
+  if(mocoBakeMode){
+    mocoSetStatus('Bake PLAY — counting down. Hit Take Recorder record now.');
+    const ok = await mocoCountdown();
+    if(!ok){ mocoSetStatus('Bake PLAY cancelled.'); return; }
+  }
   mocoCapturePlayStart();                    // relative playback: capture current positions
   mocoStartT = performance.now() - mocoPlayhead;     // resume from current playhead
   mocoState = 'playing';
-  mocoSetStatus('Playing P-armed tracks relative from current positions.');
+  mocoSetStatus(mocoBakeMode
+    ? 'Playing — Take Recorder should be capturing now.'
+    : 'Playing P-armed tracks relative from current positions.');
   mocoRenderUI();
 }
 
@@ -2848,6 +3066,17 @@ function mocoTick(){
           setParam(p, Math.max(0, Math.min(1, start + (vEnd - v0))));
         }
       }
+      // Bake mode — hold the last frame for ~1s so UE Take Recorder catches
+      // a clean tail with handles. After the tail elapses, stop normally.
+      if(mocoBakeMode && !mocoBakeTailUntil){
+        mocoBakeTailUntil = performance.now() + 1000;
+        mocoSetStatus('Holding tail for Take Recorder…');
+        return;
+      }
+      if(mocoBakeMode && performance.now() < mocoBakeTailUntil){
+        return;                            // keep ticking; values are pinned above
+      }
+      mocoBakeTailUntil = 0;
       mocoStop();
       return;
     }
@@ -2972,6 +3201,8 @@ persistBindings = function(){
 mocoResolveActive();             // ensure mocoTake pointer is valid (creates a fresh take if needed)
 mocoCanvasInit();
 mocoRenderUI();
+// Sync the Bake mode checkbox to the persisted value
+{ const cb = document.getElementById('moco-bake'); if(cb) cb.checked = mocoBakeMode; }
 
 // ── Config: save / export / import the whole setup (bindings + connection + gear) ──
 function gv(id){ const e=document.getElementById(id); return e?e.value:undefined; }
@@ -3236,6 +3467,26 @@ function setHID(on,label){ document.getElementById('hid-dot').className='dot '+(
 function setRC(on){ document.getElementById('rc-dot').className='dot '+(on?'on':'');
   document.getElementById('rc-status').textContent=on?'UE RC CONNECTED':'UE RC'; }
 
+// Bridge-side discovery state — see ue5_rc_listener.py set_discovery_state().
+// Drives the UE RC indicator with informative labels instead of just on/off.
+// States: booting | waiting | ready | lost
+function setDiscoveryState(state, cameras, note){
+  const dot = document.getElementById('rc-dot');
+  const lbl = document.getElementById('rc-status');
+  if(!dot || !lbl) return;
+  if(state === 'ready'){
+    dot.className = 'dot on';
+    lbl.textContent = cameras > 0 ? `UE RC · ${cameras} cam${cameras===1?'':'s'}` : 'UE RC CONNECTED';
+  } else if(state === 'waiting' || state === 'booting'){
+    dot.className = 'dot warn';
+    lbl.textContent = 'UE — waiting…';
+  } else if(state === 'lost'){
+    dot.className = 'dot';
+    lbl.textContent = 'UE RC LOST';
+  }
+  if(note) logMsg('UE: ' + note);
+}
+
 // ── WebSocket (same protocol as the current app / rexy_osc.py) ───────────────
 function connect(){
   clearTimeout(retryTimer);
@@ -3262,7 +3513,15 @@ function handleMessage(data){
   if(data.type==='device_connected'){ setHID(true,(data.device_name||'DEVICE').toUpperCase()); logMsg('Device: '+(data.device_name||'')); }
   else if(data.type==='device_disconnected'){ setHID(false,'NO DEVICE'); }
   else if(data.type==='rc_status'){ setRC(!!data.connected); }
+  else if(data.type==='discovery_status'){ setDiscoveryState(data.state, data.cameras||0, data.note); }
   else if(data.type==='cameras'){ populateCameras(data.cameras); }
+  else if(data.type==='auto_scan_result'){ renderScanResult(data.result); }
+  else if(data.type==='apply_scan_result'){
+    const n = (data.cameras||[]).length;
+    if(data.saved) logMsg('Auto-scan applied + saved to ' + (data.savedPath || 'mappings.json'));
+    else logMsg('Auto-scan applied for this session (' + n + ' camera(s)).');
+    populateCameras(data.cameras||[]);
+  }
   else if(data.type==='camera_active'){ updateCraneAvailability(!!data.on_crane); }
   else if(data.type==='state'&&data.controls){
     for(const id of ['pan','tilt','roll']){ const c=data.controls[id];

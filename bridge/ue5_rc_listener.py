@@ -109,6 +109,45 @@ def load_mappings(script_dir):
     return _mappings
 
 
+def save_mappings_with_backup(script_dir):
+    """Snapshot the current in-memory _mappings (with objectPaths as they were
+    resolved by the most recent set_camera() + retarget_crane_for_camera() runs)
+    back to mappings.json. The existing mappings.json is renamed with a
+    timestamp suffix first, so the user always has a safety net.
+
+    Returns the absolute path to the saved file on success."""
+    import datetime
+    path = os.path.join(script_dir, "mappings.json")
+    # Read the existing file so we preserve the top-level "ue5" config and any
+    # comment fields the user has added — we only replace the "mappings" array.
+    existing = {}
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+            stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            backup = path.replace(".json", f".bak-{stamp}.json")
+            os.replace(path, backup)
+            print(f"  save_mappings: backup written → {os.path.basename(backup)}")
+        except Exception as e:
+            print(f"  save_mappings: backup failed — {e}")
+    # Compose the new payload. Keep existing top-level keys; replace the
+    # mappings list with the live _mappings (sorted by osc path so diffs are
+    # readable). Drop runtime-only fields if any have crept in.
+    payload = dict(existing)
+    payload["mappings"] = [
+        {k: v for k, v in _mappings[osc].items() if not k.startswith("_")}
+        for osc in sorted(_mappings.keys())
+    ]
+    # Make sure the ue5 block exists even on a never-saved fresh install.
+    payload.setdefault("ue5", dict(_config))
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+        f.write("\n")
+    print(f"  save_mappings: wrote {len(payload['mappings'])} mapping(s) → mappings.json")
+    return path
+
+
 def get_rc_fields():
     """Field list for the app's picker — the friendly labels we can drive."""
     out = []
@@ -240,6 +279,51 @@ def _build_message(m, scaled):
 
 
 # ---------------------------------------------------------------------------
+# Discovery state — gates pre-UE-ready noise and feeds the app's status UI.
+# Lifecycle: booting → waiting → ready ⇄ lost. set_discovery_state() invokes
+# the registered broadcaster (rexy_osc.py registers one that pushes to all
+# connected WebSocket clients), and silently no-ops if none registered.
+# ---------------------------------------------------------------------------
+_discovery_state = "booting"            # set to "ready" after first camera resolves
+_discovery_broadcaster = None           # optional callable: (state_dict) -> None
+_discovery_camera_count = 0
+
+def get_discovery_state():
+    return _discovery_state
+
+def is_discovery_ready():
+    return _discovery_state == "ready"
+
+def register_discovery_broadcaster(cb):
+    """Called by rexy_osc.py at startup. cb receives a dict and should push it
+    to all connected app WebSocket clients."""
+    global _discovery_broadcaster
+    _discovery_broadcaster = cb
+
+def set_discovery_state(state, *, camera_count=None, note=None):
+    """Transition the discovery state machine. Suppresses no-op transitions so
+    we don't spam the app with repeated identical updates."""
+    global _discovery_state, _discovery_camera_count
+    changed = False
+    if state != _discovery_state:
+        _discovery_state = state
+        changed = True
+    if camera_count is not None and camera_count != _discovery_camera_count:
+        _discovery_camera_count = camera_count
+        changed = True
+    if not changed:
+        return
+    payload = {"type": "discovery_status", "state": _discovery_state,
+               "cameras": _discovery_camera_count}
+    if note is not None:
+        payload["note"] = note
+    if _discovery_broadcaster is not None:
+        try: _discovery_broadcaster(payload)
+        except Exception as e:
+            print(f"  discovery broadcaster failed — {e}")
+
+
+# ---------------------------------------------------------------------------
 # Request / response helpers — for reads, function calls, and describe.
 # Unlike the fire-and-forget property writes above, these await UE's reply,
 # correlated by RequestId. Used by the equipment-profiles layer (lens preset
@@ -330,7 +414,11 @@ async def calibrate_param(osc_path, verbose=False):
     Logs unconditionally (we need to be able to diagnose without --verbose)."""
     m = _mappings.get(osc_path)
     if not m:
-        print(f"  Calibrate {osc_path}: no mapping found"); return None
+        # Pre-discovery the mappings are still placeholder paths and missing
+        # entries are expected — only warn once we've actually got a camera.
+        if is_discovery_ready():
+            print(f"  Calibrate {osc_path}: no mapping found")
+        return None
     obj = m["objectPath"]; prop = m["propertyName"]
     print(f"  Calibrating {osc_path}  ({prop} on …{obj[-50:]})")
     val = await read_property(obj, prop, verbose=True)
@@ -491,7 +579,10 @@ def set_param_range(osc_path, out_min=None, out_max=None):
     override at runtime via each card's Min/Max inputs."""
     m = _mappings.get(osc_path)
     if not m:
-        print(f"  Param range: no mapping for {osc_path}"); return
+        # Same as calibrate: pre-discovery these warnings are noise.
+        if is_discovery_ready():
+            print(f"  Param range: no mapping for {osc_path}")
+        return
     if out_min is not None:
         try: m["out_min"] = float(out_min)
         except Exception: pass
@@ -823,32 +914,251 @@ async def set_grip_mode(mode, verbose=False):
 
 
 # ---------------------------------------------------------------------------
-# Multiple cameras — discover from the preset, re-target controls to a camera.
+# Multiple cameras — discover via Remote Control's actor-search API (no
+# RexyControl preset needed) and fall back to preset-based discovery if the
+# search fails. Re-target controls to a chosen camera. Walk the attach chain
+# to find a parent CameraRig_Crane (handled by retarget_crane_for_camera).
 # ---------------------------------------------------------------------------
 
-async def list_cameras(preset="RexyControl", verbose=False):
-    """Discover CineCameras by reading the Remote Control preset and pulling the
-    distinct CineCameraActor paths out of its exposed properties' owners.
-    Returns [{path, name}]. Expose any one property per camera to have it appear."""
-    resp = await _request("GET", "/remote/preset/" + preset, {}, verbose=verbose)
-    cams = {}
-    try:
-        body = resp.get("ResponseBody", resp) if isinstance(resp, dict) else {}
-        for g in body.get("Preset", {}).get("Groups", []):
-            for ep in g.get("ExposedProperties", []):
-                for owner in ep.get("OwnerObjects", []):
-                    path = owner.get("Path", "")
-                    if "CineCamera" in path and "PersistentLevel." in path:
-                        head, after = path.split("PersistentLevel.", 1)
-                        actor_name = after.split(".", 1)[0]
-                        if "CineCamera" in actor_name:
-                            cams[head + "PersistentLevel." + actor_name] = actor_name
-    except Exception as e:
+# Cache the full level-actor list for ~2 seconds so back-to-back calls (one
+# for cameras, one for cranes) don't fire two separate UE round-trips. Reset
+# whenever a new auto-scan is requested.
+_actor_cache = {"paths": [], "expires_at": 0.0}
+
+async def _try_get_all_level_actors(object_path, verbose=False, timeout=2.0):
+    """Single attempt at /remote/object/call -> GetAllLevelActors on the given
+    object path. Returns (paths, error_message). paths is empty on failure
+    and error_message describes why so the caller can log it cleanly."""
+    body = {
+        "objectPath": object_path,
+        "functionName": "GetAllLevelActors",
+        "parameters": {},
+        "generateTransaction": False,
+    }
+    resp = await _request("PUT", "/remote/object/call", body,
+                          timeout=timeout, verbose=verbose)
+    if not isinstance(resp, dict):
+        return [], "no response"
+    code = resp.get("ResponseCode")
+    payload = resp.get("ResponseBody", resp)
+    if code is not None and code >= 400:
+        err = payload.get("errorMessage", f"HTTP {code}") if isinstance(payload, dict) else f"HTTP {code}"
+        return [], err
+    if not isinstance(payload, dict):
+        return [], "non-dict response body"
+    raw = payload.get("ReturnValue") or []
+    paths = []
+    for entry in raw:
+        if isinstance(entry, str):
+            paths.append(entry)
+        elif isinstance(entry, dict):
+            p = entry.get("Path") or entry.get("ObjectPath") or entry.get("ObjectName")
+            if p: paths.append(p)
+    return paths, None
+
+
+async def _get_all_level_actors(verbose=False, timeout=2.0):
+    """Pull every actor object path in the active level. UE Remote Control has
+    no dedicated level-enumeration route, so we call GetAllLevelActors via
+    /remote/object/call. Tries the modern EditorActorSubsystem first
+    (UE 5.5+), falls back to legacy EditorLevelLibrary (UE 5.0-5.4). Cached
+    for 2s so paired discover calls share a single round-trip."""
+    import time
+    now = time.time()
+    if now < _actor_cache["expires_at"] and _actor_cache["paths"]:
         if verbose:
-            print(f"  list_cameras parse error — {e}")
+            print(f"  GetAllLevelActors: cache hit ({len(_actor_cache['paths'])} actors)")
+        return _actor_cache["paths"]
+
+    candidates = [
+        "/Script/UnrealEd.Default__EditorActorSubsystem",
+        "/Engine/Transient.UnrealEdEngine_0:EditorActorSubsystem_0",
+        "/Script/EditorScriptingUtilities.Default__EditorLevelLibrary",
+    ]
+
+    paths = []
+    last_err = None
+    for cand in candidates:
+        attempt, err = await _try_get_all_level_actors(cand, verbose=verbose, timeout=timeout)
+        if attempt:
+            paths = attempt
+            if verbose:
+                short = cand.rsplit(".", 1)[-1]
+                print(f"  GetAllLevelActors via {short}: {len(paths)} actor(s) in level")
+            break
+        else:
+            last_err = err
+            if verbose:
+                short = cand.rsplit(".", 1)[-1]
+                print(f"  GetAllLevelActors via {short}: {err}")
+
+    if not paths and verbose and last_err:
+        print(f"  GetAllLevelActors: all candidates failed (last error: {last_err})")
+
+    _actor_cache["paths"] = paths
+    _actor_cache["expires_at"] = now + 2.0
+    return paths
+
+
+def _matches_class(actor_path, class_name):
+    """Heuristic class match by actor name — UE actor paths embed the class
+    in the actor's name (e.g. CineCameraActor_3). For auto-mapping we only
+    care about CineCameraActor and CameraRig_Crane and both have unique
+    distinguishing strings in their names, so a substring match is reliable.
+
+    A stricter match would require a per-actor /remote/object/describe round
+    trip which would be 10x more network traffic for no real benefit."""
+    if not actor_path:
+        return False
+    # Pull the actor name (last segment after the final '.')
+    name = actor_path.rsplit(".", 1)[-1]
+    # CineCameraActor vs CineCameraActor_2 vs CineCameraActor3 etc.
+    return class_name in name
+
+
+async def discover_actors_by_class(class_path, verbose=False, timeout=2.0):
+    """Discover all actors of a given class in the active level. Returns a
+    list of actor object paths.
+
+    Uses /remote/object/call → EditorLevelLibrary.GetAllLevelActors (works
+    on every UE 5.x) and filters by class name on the bridge side. The full
+    actor list is cached for 2s so paired discover calls (one for cameras,
+    one for cranes during auto_scan_level) share a single UE round-trip.
+
+    class_path can be either a full UE class path like
+    '/Script/CinematicCamera.CineCameraActor' (we extract the short class
+    name) or just the short name like 'CineCameraActor'."""
+    all_paths = await _get_all_level_actors(verbose=verbose, timeout=timeout)
+    # Extract the short class name from a full path if needed.
+    class_name = class_path.rsplit(".", 1)[-1]
+    matches = [p for p in all_paths if _matches_class(p, class_name)]
+    if verbose:
+        print(f"  class '{class_name}': {len(matches)} of {len(all_paths)} actor(s)")
+    return matches
+
+
+def _reset_actor_cache():
+    """Forces the next discovery to re-query UE. Called when the user clicks
+    Scan UE so they always see the latest level state."""
+    _actor_cache["expires_at"] = 0.0
+    _actor_cache["paths"] = []
+
+
+def _name_from_path(actor_path):
+    """Pull the actor's name out of a full UE object path. Path looks like
+    '/Game/Maps/Main.Main:PersistentLevel.CineCameraActor_1' — the part after
+    the last '.' is the actor name."""
+    if "PersistentLevel." in actor_path:
+        after = actor_path.split("PersistentLevel.", 1)[1]
+        return after.split(".", 1)[0]
+    return actor_path.rsplit(".", 1)[-1]
+
+
+async def list_cameras(preset="RexyControl", verbose=False, timeout=1.5):
+    """Discover CineCameras in the active level. Tries actor-search first (no
+    per-project preset required) and falls back to preset-based discovery for
+    backwards compatibility with users who still keep a RexyControl preset.
+    Returns [{path, name}]."""
+    # Path 1: actor-search. Works on any UE 5.x with Remote Control enabled,
+    # no exposure required. This is the auto-mapping happy path.
+    actor_paths = await discover_actors_by_class(
+        "/Script/CinematicCamera.CineCameraActor",
+        verbose=verbose, timeout=timeout)
+    via_search = bool(actor_paths)
+    cams = {p: _name_from_path(p) for p in actor_paths}
+
+    # Path 2: fall back to preset-based discovery if search returned nothing.
+    # Either UE is still booting, or the search endpoint isn't available on
+    # this UE version, or there genuinely are no cameras in the level.
+    fallback_resp = None
+    if not cams:
+        fallback_resp = await _request("GET", "/remote/preset/" + preset, {},
+                                       timeout=timeout, verbose=verbose)
+        try:
+            body = fallback_resp.get("ResponseBody", fallback_resp) if isinstance(fallback_resp, dict) else {}
+            for g in body.get("Preset", {}).get("Groups", []):
+                for ep in g.get("ExposedProperties", []):
+                    for owner in ep.get("OwnerObjects", []):
+                        path = owner.get("Path", "")
+                        if "CineCamera" in path and "PersistentLevel." in path:
+                            head, after = path.split("PersistentLevel.", 1)
+                            actor_name = after.split(".", 1)[0]
+                            if "CineCamera" in actor_name:
+                                cams[head + "PersistentLevel." + actor_name] = actor_name
+        except Exception as e:
+            if verbose:
+                print(f"  list_cameras preset-fallback parse error — {e}")
+
     out = [{"path": p, "name": n} for p, n in cams.items()]
-    print(f"  Cameras found: {[c['name'] for c in out]}")
+
+    # Discovery-state machine — drive the app's status UI.
+    if not actor_paths and fallback_resp is None:
+        # No reply from either path = UE not responding yet.
+        if _discovery_state != "ready":
+            set_discovery_state("waiting", camera_count=0)
+    elif out:
+        method = "actor-search" if via_search else "RexyControl preset"
+        set_discovery_state("ready", camera_count=len(out),
+                            note=f"Discovered via {method}.")
+    else:
+        # UE replied but found nothing — probably an empty level.
+        set_discovery_state("waiting", camera_count=0,
+                            note="UE responded but no CineCameraActors in the level yet.")
+
+    if verbose or out:
+        method = "search" if via_search else ("preset" if out else "none")
+        print(f"  Cameras found ({method}): {[c['name'] for c in out]}")
     return out
+
+
+async def list_cranes(verbose=False, timeout=1.5):
+    """Discover CameraRig_Crane actors in the active level via actor-search.
+    Returns [{path, name}]. Used by the auto-scan flow to show the user what
+    grip rigs were found (cranes are auto-paired to cameras at set_camera()
+    time via retarget_crane_for_camera; this is just for the scan summary)."""
+    paths = await discover_actors_by_class(
+        "/Script/CinematicCamera.CameraRig_Crane",
+        verbose=verbose, timeout=timeout)
+    out = [{"path": p, "name": _name_from_path(p)} for p in paths]
+    if verbose or out:
+        print(f"  Cranes found: {[c['name'] for c in out]}")
+    return out
+
+
+async def auto_scan_level(verbose=False):
+    """High-level scan called by the app's 'Scan UE' button. Finds all cameras
+    and cranes via actor-search, walks each camera's attach chain to identify
+    which crane (if any) it's mounted on, and returns a structured summary the
+    app shows in its confirmation panel before applying.
+
+    Returns: {
+      'cameras': [{'path', 'name', 'crane_path' or None, 'crane_name' or None}],
+      'cranes':  [{'path', 'name'}],
+      'method':  'search' | 'preset' | 'none',
+    }"""
+    cams = await list_cameras(verbose=verbose)
+    cranes = await list_cranes(verbose=verbose)
+    method = "search" if cams else "none"
+
+    # Pair cameras to cranes by walking each camera's attach chain. Re-uses
+    # the existing _find_parent_crane() helper.
+    enriched = []
+    for c in cams:
+        crane_path = None
+        crane_name = None
+        try:
+            crane_path = await _find_parent_crane(c["path"], verbose=verbose)
+            if crane_path:
+                crane_name = _name_from_path(crane_path)
+        except Exception as e:
+            if verbose:
+                print(f"  auto_scan_level: attach-walk failed for {c['name']} — {e}")
+        enriched.append({
+            "path": c["path"], "name": c["name"],
+            "crane_path": crane_path, "crane_name": crane_name,
+        })
+
+    return {"cameras": enriched, "cranes": cranes, "method": method}
 
 
 def set_camera(actor_path):
@@ -1027,6 +1337,7 @@ def _enqueue(path, value):
 # Buffer the latest value per path and drain at the configured rate. Latest write wins.
 _throttle_buffer = {}        # osc_path -> latest float value
 _throttle_drain_task = None  # single drain task, lazy-started
+
 
 async def _throttle_drain_loop():
     """Drain the throttled-write buffer. Each path emits its most recent value
