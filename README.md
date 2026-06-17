@@ -4,11 +4,15 @@ Virtual production camera control for Unreal Engine 5. Drive Cine Camera Actors 
 
 ![Rexy Bridge app](docs/screenshots/app-header.png)
 
-> ### v2.0 beta is here — Virtual MoCo
+> ### v2.0 beta — Virtual MoCo + auto-mapping
 >
-> The **`v2-beta`** branch adds a full **Virtual Motion Control** system: record live performances of every bound parameter at 60Hz, multi-take management, a colour-coded timeline with playhead and zoom, bezier-lite curve editing per track, and `.rxmove` file save/load. The bridge and hardware support are unchanged from v1.0 — everything new lives in the browser app.
+> The **`v2-beta`** branch adds two big things on top of v1:
 >
-> See the [v2.0.0-beta.1 release](https://github.com/RexyGaming/rexy-bridge/releases/tag/v2.0.0-beta.1) for the download, or `git checkout v2-beta` if you're cloning. Stable v1.0 stays on `main`. Bug reports welcome via Issues — please tag with `v2-beta`.
+> 1. **Virtual MoCo** — record live performances of every bound parameter at 60Hz, multi-take management, a colour-coded timeline with playhead and zoom, bezier-lite curve editing per track, `.rxmove` file save/load, and a Bake mode that syncs with UE's Take Recorder via a 3-2-1 countdown.
+> 2. **Auto-mapping** — a new **⌕ Scan UE** button finds every `CineCameraActor` and `CameraRig_Crane` in your level automatically and writes them into `mappings.json` (with a timestamped backup). **No `RexyControl` preset required**, no hand-editing of object paths — just drop into a UE project, hit Scan, you're driving cameras in seconds.
+>
+> See the [v2.0.0-beta.2 release](https://github.com/RexyGaming/rexy-bridge/releases/tag/v2.0.0-beta.2) for the download, or `git checkout v2-beta` if you're cloning. Stable v1.1 stays on `main`. Bug reports welcome via Issues — please tag with `v2-beta`.
+
 
 ## What it does
 
@@ -59,15 +63,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Set up Unreal Engine
+### 2. Set up your UE5 scene
 
-See [`docs/ue5-setup.md`](docs/ue5-setup.md) for step-by-step instructions covering:
-- Enabling the Remote Control plugin
-- Creating the `RexyControl` preset
-- Exposing camera properties so multi-camera discovery works
-- Finding your camera and crane object paths
+If you're new to UE5 or starting a fresh project, see [`docs/scene-setup.md`](docs/scene-setup.md) — it covers picking a project template, a list of recommended free levels to test against, and the exact steps to drop a `CameraRig_Crane` + `CineCameraActor` into your scene with the right attachment.
+
+For the deeper UE-side configuration (Remote Control plugin, WebSocket port, manual preset setup if you're on v1), see [`docs/ue5-setup.md`](docs/ue5-setup.md).
 
 ### 3. Configure mappings
+
+> **v2-beta users:** skip this step. Click **⌕ Scan UE** in the app once it's running — auto-mapping finds your cameras/cranes and writes `mappings.json` for you (with a timestamped backup). No hand-editing required.
+
+For v1 / manual setup:
 
 ```bash
 cp mappings.json.example bridge/mappings.json

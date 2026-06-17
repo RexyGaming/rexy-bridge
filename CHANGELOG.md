@@ -2,6 +2,32 @@
 
 All notable changes to Rexy Bridge will be documented here.
 
+## [2.0.0-beta.2] — Auto-mapping + bake mode (beta)
+
+Second public beta of the v2 line. Bridge and hardware support still unchanged from 1.x. The major additions this drop:
+
+### Auto-mapping (no preset required)
+
+- **⌕ Scan UE button** in the active-camera row. Bridge calls UE's `GetAllLevelActors` via Remote Control, finds every `CineCameraActor` and `CameraRig_Crane` in the active level, walks the attach chain to pair each camera with its parent crane, and presents the result in a confirmation panel.
+- **No `RexyControl` preset needed.** The bridge no longer requires a Remote Control preset to discover cameras — `GetAllLevelActors` works on any level regardless of what's exposed. The preset path is kept as a fallback for backwards compatibility.
+- **Apply (session) / Apply + Save.** The confirmation panel offers two flavours: apply in-memory only (won't survive a bridge restart) or save back to `bridge/mappings.json` with a timestamped backup of the previous file.
+- **Multi-UE-version support.** Tries `EditorActorSubsystem` first (UE 5.5+) then falls back to `EditorLevelLibrary` (UE 5.0–5.4) — works across the supported UE 5.x range.
+
+### Discovery state machine + startup polish
+
+- **Bridge-side discovery state** (`booting → waiting → ready → lost`) drives the app's `UE RC` indicator with calm "UE — waiting…" messaging during the editor load instead of going silently grey.
+- **`--ue-startup-grace` flag** (default 10s) — bridge holds off declaring `RC OFFLINE` to the app for a configurable grace window after launch. Reduces the false-red-dot panic during a fresh editor launch.
+- **Shorter discovery timeouts.** Preset and search probes now use a 1.5s timeout instead of 5s — UE either responds fast or it's still booting, so the longer timeout was pure wait time.
+- **Silenced pre-discovery noise.** `Param range: no mapping for /rexy/baseZ` and `Calibrate: no mapping found` warnings are suppressed until the bridge has discovered at least one camera — they're meaningless before that point.
+- **Camera count in the indicator.** Once ready, the indicator reads `UE RC · 3 cams` (or whatever count) so you know discovery succeeded at a glance.
+
+### Bake mode — UE Take Recorder sync
+
+- **Bake checkbox** next to PLAY in the MoCo transport row. When ticked, REC and PLAY both fire a **3-2-1 countdown** with audible sine-tone beeps so you can hit UE's Take Recorder record button in sync.
+- **Held-frame tail** — after playback reaches the end of a take in bake mode, Rexy holds the final frame for 1 second before stopping, so Take Recorder captures a clean trim point.
+- **Cancellable.** STOP during the countdown aborts cleanly — no R-armed tracks get wiped, no playhead movement.
+- **Workflow.** Arm Take Recorder → tick Bake → hit Rexy REC or PLAY → use the 3 seconds to hit TR record → both record in lockstep. The played-back Rexy take becomes a baked Sequence asset that lives in UE's editorial pipeline normally.
+
 ## [2.0.0-beta.1] — Virtual MoCo (beta)
 
 First public beta of the v2 line. The bridge and hardware support are unchanged from 1.0; everything new is in the browser app under the new **Virtual MoCo** panel — a full record / playback system for every bound parameter, with editable curves and file-based take exchange.
