@@ -40,3 +40,7 @@ rexy-bridge-config*.json
 *.log
 scratch/
 .tmp/
+
+# Mappings auto-backups
+bridge/mappings.bak-*.json
+mappings.bak-*.json

@@ -164,6 +164,7 @@
         padding:7px;border-radius:6px;cursor:pointer;transition:.15s}
   .mini:hover{color:var(--text);background:rgba(255,255,255,.03)}
   .mini.active{color:var(--gold);border-color:var(--gold)}
+  .mini.inv-on,.bindbtn.inv-on{color:#7dd3fc;border-color:#7dd3fc;background:rgba(125,211,252,.10)}
   .bindbtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter';font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px;cursor:pointer;float:right}
   .listening{color:var(--gold)!important;border-color:var(--gold)!important;background:rgba(246,190,26,.12)!important}
   .bound{color:var(--blue)!important;border-color:var(--blue)!important}
@@ -382,11 +383,11 @@
       <!-- On-set order: focus, iris, zoom. "Iris" is the on-set term for aperture
            but the underlying param id stays 'aperture' so bindings / mappings.json /
            saved configs all keep working unchanged. -->
-      <div class="field2"><label>Focus <button class="bindbtn" id="bind-focus" onclick="startBind('focus')" oncontextmenu="clearBind('focus');return false;">Bind</button><span class="ro-inline v-gold" id="ro-focus">0.500</span></label>
+      <div class="field2"><label>Focus <button class="bindbtn" id="bind-focus" onclick="startBind('focus')" oncontextmenu="clearBind('focus');return false;">Bind</button><button class="bindbtn" id="inv-focus" onclick="toggleInvert('focus')" title="Flip the direction of this binding">Inv</button><span class="ro-inline v-gold" id="ro-focus">0.500</span></label>
         <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-focus" class="ps ps-gold" oninput="onSlider('focus',this.value)"></div>
-      <div class="field2"><label>Iris <button class="bindbtn" id="bind-aperture" onclick="startBind('aperture')" oncontextmenu="clearBind('aperture');return false;">Bind</button><span class="ro-inline v-gold" id="ro-aperture">0.500</span></label>
+      <div class="field2"><label>Iris <button class="bindbtn" id="bind-aperture" onclick="startBind('aperture')" oncontextmenu="clearBind('aperture');return false;">Bind</button><button class="bindbtn" id="inv-aperture" onclick="toggleInvert('aperture')" title="Flip the direction of this binding">Inv</button><span class="ro-inline v-gold" id="ro-aperture">0.500</span></label>
         <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-aperture" class="ps ps-gold" oninput="onSlider('aperture',this.value)"></div>
-      <div class="field2"><label>Zoom <button class="bindbtn" id="bind-zoom" onclick="startBind('zoom')" oncontextmenu="clearBind('zoom');return false;">Bind</button><span class="ro-inline v-gold" id="ro-zoom">0.500</span></label>
+      <div class="field2"><label>Zoom <button class="bindbtn" id="bind-zoom" onclick="startBind('zoom')" oncontextmenu="clearBind('zoom');return false;">Bind</button><button class="bindbtn" id="inv-zoom" onclick="toggleInvert('zoom')" title="Flip the direction of this binding">Inv</button><span class="ro-inline v-gold" id="ro-zoom">0.500</span></label>
         <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-zoom" class="ps ps-gold" oninput="onSlider('zoom',this.value)"></div>
     </div>
   </div>
@@ -410,6 +411,8 @@
       <button class="moco-btn small" onclick="mocoExportTake()" title="Save the current take to a .rxmove file">↑ Save</button>
       <button class="moco-btn small" onclick="document.getElementById('moco-import').click()" title="Load takes from a .rxmove file">↓ Load</button>
       <input type="file" id="moco-import" accept=".rxmove,.json,application/json" style="display:none" onchange="mocoImportTake(this.files[0])">
+      <span style="width:1px;height:14px;background:var(--border-soft)"></span>
+      <button class="moco-btn small" id="moco-expand-btn" onclick="mocoToggleExpand()" title="Toggle between shared-canvas (all tracks overlaid) and expanded (each track in its own lane, stacked vertically)">⇕ Expand</button>
       <span style="width:1px;height:14px;background:var(--border-soft)"></span>
       <button class="moco-btn small moco-reset" onclick="mocoHardReset()" title="Erase all takes and reset colour bindings to defaults">⟲ Reset</button>
       <span style="width:1px;height:14px;background:var(--border-soft)"></span>
@@ -530,6 +533,7 @@ function wheelCard(id,accent){
     <div class="rowbtns">
       <button class="mini" id="bind-${id}" onclick="startBind('${id}')" oncontextmenu="clearBind('${id}');return false;">Bind</button>
       <button class="mini" id="hold-${id}" onclick="toggleHold('${id}')">Hold</button>
+      <button class="mini" id="inv-${id}"  onclick="toggleInvert('${id}')" title="Flip the direction of this binding. Overrides auto-invert-on-bind.">Inv</button>
       <button class="mini" onclick="doReset('${id}')">Reset</button>
     </div>
     <div class="tunerow">
@@ -553,6 +557,7 @@ function gripCard(id){
     <input type="range" min="0" max="1" step="0.001" value="0.5" id="slider-${id}" class="ps ps-blue" oninput="onSlider('${id}',this.value)">
     <div class="rowbtns">
       <button class="mini" id="bind-${id}" onclick="startBind('${id}')" oncontextmenu="clearBind('${id}');return false;">Bind</button>
+      <button class="mini" id="inv-${id}"  onclick="toggleInvert('${id}')" title="Flip the direction of this binding. Overrides auto-invert-on-bind.">Inv</button>
       <button class="mini" onclick="doReset('${id}')">Reset</button>
     </div>
     <div class="tunerow">
@@ -1080,6 +1085,96 @@ function mocoPlayPauseToggle(){
   else mocoPlay();
 }
 
+// ── Expand mode (per-track lanes vs shared canvas) ──────────────────────
+// Collapsed (default): all tracks share one canvas, each spans full height,
+// slider value 0-1 maps to full plot area. Great when you have 1-3 tracks
+// and want to see everything at once, but crowded with many tracks.
+// Expanded: canvas grows taller; each track gets its own labelled lane
+// stacked vertically. Slider value 0-1 maps to that lane's vertical range.
+// Playhead spans all lanes. Scrub / zoom / hover / anchor drag all work in
+// both modes; the y-coordinate helpers below abstract the lane math.
+let mocoExpanded = false;
+try { mocoExpanded = localStorage.getItem('rexy_moco_expanded') === '1'; } catch(e){}
+const MOCO_LANE_MIN_PX = 44;     // minimum lane height when expanded — below this, labels/curves get unreadable
+
+function mocoToggleExpand(){
+  mocoExpanded = !mocoExpanded;
+  try { localStorage.setItem('rexy_moco_expanded', mocoExpanded ? '1' : '0'); } catch(e){}
+  mocoUpdateExpandUI();
+  // Resize canvas: in collapsed mode canvas is 180px (CSS default); in
+  // expanded mode grow it so each lane has at least MOCO_LANE_MIN_PX.
+  const canvas = document.getElementById('moco-canvas');
+  if(canvas){
+    if(mocoExpanded){
+      const n = Math.max(1, mocoLaneList().length);
+      const h = Math.max(180, n * MOCO_LANE_MIN_PX + 14);
+      canvas.style.height = h + 'px';
+    } else {
+      canvas.style.height = '';    // revert to CSS default
+    }
+  }
+  mocoCanvasResize();               // picks up the new size and redraws
+  mocoSetStatus(mocoExpanded
+    ? 'Expanded — each track in its own lane.'
+    : 'Shared canvas — tracks overlaid.');
+}
+
+function mocoUpdateExpandUI(){
+  const btn = document.getElementById('moco-expand-btn');
+  if(btn){
+    btn.textContent = mocoExpanded ? '⇕ Collapse' : '⇕ Expand';
+    btn.classList.toggle('active', mocoExpanded);
+  }
+}
+
+// Returns the ordered list of params to render as lanes. Includes every
+// param that either has recorded data in the current take OR has a binding
+// (so blank lanes appear for bound-but-not-yet-recorded params — makes it
+// obvious where the track WILL land when they record).
+function mocoLaneList(){
+  const list = [];
+  const seen = new Set();
+  const hasData = (p) => mocoTake && mocoTake.tracks && mocoTake.tracks[p] && mocoTake.tracks[p].length;
+  const hasBind = (p) => typeof bindings !== 'undefined' && bindings && bindings[p];
+  for(const p of (typeof PARAMS !== 'undefined' ? PARAMS : [])){
+    if((hasData(p) || hasBind(p)) && !seen.has(p)){
+      list.push(p); seen.add(p);
+    }
+  }
+  // Fallback: if PARAMS wasn't defined for some reason, use whatever tracks exist
+  if(!list.length && mocoTake && mocoTake.tracks){
+    for(const p in mocoTake.tracks){ if(!seen.has(p)){ list.push(p); seen.add(p); } }
+  }
+  return list;
+}
+
+// Return the y-range (top, bottom, height) that a given param's plot area
+// occupies within the canvas. In collapsed mode all params share the full
+// plot area. In expanded mode each gets a horizontal slice.
+function mocoLaneForParam(p, laneList){
+  const plotH = mocoCanvasH - 14;    // reserve 14px for time labels
+  if(!mocoExpanded || !laneList || laneList.length === 0){
+    return { top: 0, bottom: plotH, height: plotH };
+  }
+  const idx = laneList.indexOf(p);
+  if(idx < 0) return { top: 0, bottom: plotH, height: plotH };
+  const laneH = plotH / laneList.length;
+  return { top: idx * laneH, bottom: (idx + 1) * laneH, height: laneH };
+}
+
+// Given a canvas y-coordinate, return the param whose lane contains it, or
+// null if it's in the footer or (in collapsed mode) if there are no lanes.
+// Used by anchor hit-testing and drag-in-expanded-mode.
+function mocoParamAtY(y, laneList){
+  const plotH = mocoCanvasH - 14;
+  if(y < 0 || y > plotH) return null;
+  if(!mocoExpanded) return null;     // in collapsed mode, ambiguous — caller falls back to any param
+  const n = laneList.length;
+  if(n === 0) return null;
+  const idx = Math.floor((y / plotH) * n);
+  return laneList[Math.max(0, Math.min(n-1, idx))];
+}
+
 // ── Bake mode (sync with UE Take Recorder) ──────────────────────────────
 // When on, REC and PLAY fire a 3-2-1 countdown with audible beeps so the
 // user can hit Take Recorder's record button in sync. Also adds a 1s
@@ -1371,9 +1466,42 @@ function bindLabel(p){
   else el.textContent='⌨ '+keyName(b.inc)+' / '+keyName(b.dec);
   el.classList.toggle('listening', !!arming);
   el.classList.toggle('bound', !!b && !arming);
+  // Keep the Inv button visual state in sync — highlighted when the current
+  // binding is flipped. Also grey it out when there's no binding to flip.
+  const inv=document.getElementById('inv-'+p);
+  if(inv){
+    const flipped = !!(b && (b.type==='axis' ? b.inv : b.swap));
+    inv.classList.toggle('inv-on', flipped);
+    inv.disabled = !b;
+    inv.style.opacity = b ? '1' : '0.4';
+    inv.style.cursor  = b ? 'pointer' : 'not-allowed';
+  }
 }
 function startBind(p){ learn={param:p,stage:'first'}; PARAMS.forEach(bindLabel); logMsg('Bind '+p+': actuate the control…'); }
 function clearBind(p){ delete bindings[p]; persistBindings(); bindLabel(p); logMsg('Cleared binding: '+p); }
+
+// Manual invert toggle — flips the direction of an existing binding. For axis
+// bindings this flips b.inv (already respected in the input loop at line ~1614).
+// For key bindings, swap inc/dec so the two keys switch roles. Highlights the
+// Inv button when the binding is currently flipped from its default.
+function toggleInvert(p){
+  const b=bindings[p];
+  if(!b){
+    logMsg('Invert '+p+': no binding to flip — bind a control first.');
+    return;
+  }
+  if(b.type==='axis'){
+    b.inv = !b.inv;
+    logMsg('Invert '+p+': '+(b.inv ? 'ON' : 'OFF'));
+  } else if(b.type==='keys'){
+    // Swap the two keys. Track the swap state so bindLabel can reflect it.
+    const oldInc=b.inc; b.inc=b.dec; b.dec=oldInc;
+    b.swap = !b.swap;
+    logMsg('Invert '+p+': swapped inc/dec keys');
+  }
+  persistBindings();
+  bindLabel(p);
+}
 function captureInput(inp){
   if(!learn) return; const p=learn.param;
   if(inp.kind==='axis'){
@@ -1887,17 +2015,20 @@ function mocoAnchorHitTest(e){
   const rect = mocoCanvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
-  const h = mocoCanvasH;
-  const plotH = h - 14;
+  // Lane-aware: each param may occupy a different vertical slice of the
+  // canvas in expanded mode. mocoLaneForParam returns the full plot area
+  // when collapsed, so collapsed-mode behaviour is unchanged.
+  const laneList = mocoLaneList();
   const keys = Object.keys(mocoTake.tracks).filter(p => mocoIsTrackE(p));
   for(let k = keys.length - 1; k >= 0; k--){
     const p = keys[k];
     const anchors = mocoEditAnchors(p);
     if(!anchors) continue;
+    const lane = mocoLaneForParam(p, laneList);
     for(let i = 0; i < anchors.length; i++){
       const a = anchors[i];
       const x = mocoTimeToX(a.t);
-      const y = plotH - (a.v * plotH);
+      const y = lane.bottom - (a.v * lane.height);
       if(Math.hypot(mx - x, my - y) <= MOCO_ANCHOR_HIT_PX){
         return { param: p, idx: i };
       }
@@ -1916,20 +2047,25 @@ function mocoInsertAnchorAt(e){
   const rect = mocoCanvas.getBoundingClientRect();
   const mx = Math.max(0, Math.min(rect.width,  e.clientX - rect.left));
   const my = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
-  const plotH = mocoCanvasH - 14;
   const t = mocoXToTime(mx);
-  const clickV = Math.max(0, Math.min(1, 1 - (my / plotH)));
-  // Find the closest E-on track at this time.
+  const laneList = mocoLaneList();
+  // In expanded mode, use the lane the cursor is in to identify the target
+  // track directly (only one candidate). In collapsed mode, find the closest
+  // E-on track by y-distance from its spline at t.
+  const laneParam = mocoParamAtY(my, laneList);
   let best = null, bestDist = Infinity;
   for(const p in mocoTake.tracks){
     if(!mocoIsTrackE(p)) continue;
+    if(mocoExpanded && laneParam && p !== laneParam) continue;   // wrong lane
     const anchors = mocoEditAnchors(p);
     if(!anchors || anchors.length < 2) continue;
     if(t <= anchors[0].t || t >= anchors[anchors.length-1].t) continue;
+    const lane = mocoLaneForParam(p, laneList);
+    const clickV = Math.max(0, Math.min(1, (lane.bottom - my) / lane.height));
     const v = mocoEvalAnchors(anchors, t);
     if(v == null) continue;
     const d = Math.abs(v - clickV);
-    if(d < bestDist){ bestDist = d; best = { p, anchors, v }; }
+    if(d < bestDist){ bestDist = d; best = { p, anchors, v, clickV }; }
   }
   if(!best){
     mocoSetStatus('Double-click on a track curve in E mode to add an anchor.');
@@ -1939,8 +2075,8 @@ function mocoInsertAnchorAt(e){
   // the spline (within 10% of slider), otherwise use the spline value at t so
   // the new anchor lands on the existing curve. This makes single-click adds
   // non-destructive and explicit pull-off-curve edits possible.
-  const useClickV = Math.abs(clickV - best.v) > 0.10;
-  const newAnchor = { t: t, v: useClickV ? clickV : best.v };
+  const useClickV = Math.abs(best.clickV - best.v) > 0.10;
+  const newAnchor = { t: t, v: useClickV ? best.clickV : best.v };
   let i = 0;
   while(i < best.anchors.length && best.anchors[i].t < t) i++;
   best.anchors.splice(i, 0, newAnchor);
@@ -1973,11 +2109,13 @@ function mocoAnchorDragMove(e){
   const rect = mocoCanvas.getBoundingClientRect();
   const mx = Math.max(0, Math.min(rect.width,  e.clientX - rect.left));
   const my = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
-  const plotH = mocoCanvasH - 14;
-  // Map pixel back to (t, v). Clamp v to [0,1]. Clamp t between neighbours so
-  // anchors can't cross each other (keeps the spline monotonic in time).
+  // Lane-aware: constrain the drag's y into the param's lane in expanded mode.
+  const laneList = mocoLaneList();
+  const lane = mocoLaneForParam(mocoAnchorDrag.param, laneList);
+  // Clamp y to the lane's vertical range, then convert to slider value 0..1.
+  const clampedY = Math.max(lane.top, Math.min(lane.bottom, my));
   const newT = mocoXToTime(mx);
-  const newV = Math.max(0, Math.min(1, 1 - (my / plotH)));
+  const newV = Math.max(0, Math.min(1, (lane.bottom - clampedY) / lane.height));
   const prev = anchors[mocoAnchorDrag.idx - 1];
   const next = anchors[mocoAnchorDrag.idx + 1];
   const tMin = prev ? prev.t + 1 : 0;
@@ -1996,6 +2134,12 @@ function mocoCanvasInit(){
   mocoCanvas = document.getElementById('moco-canvas');
   if(!mocoCanvas) return;
   mocoCtx = mocoCanvas.getContext('2d');
+  // Apply the persisted expand-mode state on boot — canvas height + button label.
+  if(mocoExpanded){
+    const n = Math.max(1, mocoLaneList().length);
+    mocoCanvas.style.height = Math.max(180, n * MOCO_LANE_MIN_PX + 14) + 'px';
+  }
+  mocoUpdateExpandUI();
   mocoCanvasResize();
   window.addEventListener('resize', mocoCanvasResize);
   // Pointer interaction — click to seek, drag to scrub, drag anchors when E
@@ -2337,11 +2481,31 @@ function mocoCanvasDraw(){
   // Each track's curve — clip samples to the visible window. Tracks with E on
   // get drawn as the smoothed spline through their anchors instead of the raw
   // polyline; the raw samples appear as a faint ghost beneath for reference.
+  // Lane math: in collapsed mode every param uses the full plot area; in
+  // expanded mode each param gets its own horizontal slice via mocoLaneForParam.
+  const laneList = mocoLaneList();
   if(mocoTake && mocoTake.tracks){
     const plotH = h - 14;
+
+    // In expanded mode, draw faint horizontal dividers between lanes so it's
+    // obvious where each track's zone starts and ends.
+    if(mocoExpanded && laneList.length > 1){
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      ctx.lineWidth = 1;
+      for(let i = 1; i < laneList.length; i++){
+        const y = Math.round((i / laneList.length) * plotH) + 0.5;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+    }
+
     for(const p in mocoTake.tracks){
       const trk = mocoTake.tracks[p];
       if(!trk || trk.length < 2) continue;
+      // In expanded mode, skip params that aren't in the lane list (should
+      // never happen since lane list is derived from tracks + bindings, but
+      // guard anyway).
+      if(mocoExpanded && laneList.indexOf(p) < 0) continue;
+      const lane = mocoLaneForParam(p, laneList);
       const visible = mocoIsTrackP(p) || mocoIsTrackR(p) || mocoIsTrackE(p);
       const editOn = mocoIsTrackE(p);
       const anchors = editOn ? mocoEditAnchors(p) : null;
@@ -2355,7 +2519,7 @@ function mocoCanvasDraw(){
         const s = trk[i];
         if(s.t < vStart - mocoViewMs || s.t > vEnd + mocoViewMs) continue;
         const x = mocoTimeToX(s.t);
-        const y = plotH - (s.v * plotH);
+        const y = lane.bottom - (s.v * lane.height);
         if(!started){ ctx.moveTo(x, y); started = true; }
         else ctx.lineTo(x, y);
       }
@@ -2374,7 +2538,7 @@ function mocoCanvasDraw(){
           if(t < anchors[0].t || t > anchors[anchors.length-1].t) continue;
           const v = mocoEvalAnchors(anchors, t);
           if(v == null) continue;
-          const y = plotH - (Math.max(0, Math.min(1, v)) * plotH);
+          const y = lane.bottom - (Math.max(0, Math.min(1, v)) * lane.height);
           if(first){ ctx.moveTo(x, y); first = false; }
           else ctx.lineTo(x, y);
         }
@@ -2389,6 +2553,7 @@ function mocoCanvasDraw(){
       if(!mocoIsTrackE(p)) continue;
       const anchors = mocoEditAnchors(p);
       if(!anchors) continue;
+      const lane = mocoLaneForParam(p, laneList);
       ctx.fillStyle = mocoColour(p);
       ctx.strokeStyle = '#0d1219';
       ctx.lineWidth = 2;
@@ -2396,11 +2561,28 @@ function mocoCanvasDraw(){
         const a = anchors[i];
         if(a.t < vStart - mocoViewMs || a.t > vEnd + mocoViewMs) continue;
         const x = mocoTimeToX(a.t);
-        const y = plotH - (a.v * plotH);
+        const y = lane.bottom - (a.v * lane.height);
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+      }
+    }
+
+    // Lane labels — in expanded mode, print the param name + colour dot in the
+    // top-left of each lane so the user knows which track is which. Drawn last
+    // so they sit on top of the curves.
+    if(mocoExpanded){
+      ctx.font = 'bold 10px "Inter", sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      for(const p of laneList){
+        const lane = mocoLaneForParam(p, laneList);
+        // Small filled square in the track colour, then the param name in white
+        ctx.fillStyle = mocoColour(p);
+        ctx.fillRect(6, lane.top + 5, 8, 8);
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillText(p, 20, lane.top + 4);
       }
     }
   }

@@ -1471,9 +1471,12 @@ async def listener_loop(broadcast, ue5_host=None, verbose=False):
 
     # If there are no mappings, idle forever (do nothing, harmlessly).
     if not _mappings:
-        print("  RC bridge: idle (no mappings).")
-        while True:
-            await asyncio.sleep(3600)
+        # v1 behaviour was to idle-forever when _mappings is empty.
+        # v2 auto-mapping needs the WS live so Scan UE can call
+        # /remote/object/call → GetAllLevelActors. So we connect anyway;
+        # an empty _mappings just means no writes happen until the user
+        # runs Scan UE → Apply + Save.
+        print("  RC bridge: no mappings yet — connecting anyway so Scan UE can discover the level.")
 
     while True:
         try:
