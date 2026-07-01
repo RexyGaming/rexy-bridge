@@ -4,6 +4,16 @@ Virtual production camera control for Unreal Engine 5. Drive Cine Camera Actors 
 
 ![Rexy Bridge app](docs/screenshots/app-header.png)
 
+> ### 📦 This repository is archived — active development has moved
+>
+> **Rexy Bridge is still free to use.** But this public repo is now a historical snapshot — the v1.1.0 release, tagged in this branch — and won't receive further updates.
+>
+> All development from v2.3 onwards is closed source. To get the **latest build** or report an issue, please contact **rob@realprogear.com**.
+>
+> The v1.1.0 release remains available under this repo's MIT license for anyone who wants to fork the historical version. The `v2-beta` branch is also preserved here as a public archive of that development line up to July 2026.
+>
+> ---
+
 ## What it does
 
 - **Live camera head control** — pan, tilt, roll with a real fluid-head feel (response curve, sensitivity, deadband, feather per axis)
