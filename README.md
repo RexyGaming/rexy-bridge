@@ -4,6 +4,16 @@ Virtual production camera control for Unreal Engine 5. Drive Cine Camera Actors 
 
 ![Rexy Bridge app](docs/screenshots/app-header.png)
 
+> ### 📦 This repository is archived — active development has moved
+>
+> **Rexy Bridge is still free to use.** But this public repo is now a historical snapshot — the v2.0.0-beta.2 release as of July 2026 — and won't receive further updates.
+>
+> All development from v2.3 onwards is closed source. To get the **latest build** or report an issue, please contact **rob@realprogear.com**.
+>
+> The releases in this repo remain available under the MIT license for anyone who wants to fork the historical versions.
+>
+> ---
+
 > ### v2.0 beta — Virtual MoCo + auto-mapping
 >
 > The **`v2-beta`** branch adds two big things on top of v1:
